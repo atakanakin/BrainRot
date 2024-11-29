@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { scroller } from "react-scroll";
+import { useNavigate } from "react-router-dom";
 
 const OnboardingVideoSection = ({
   id,
@@ -15,18 +16,20 @@ const OnboardingVideoSection = ({
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasAutoplayed, setHasAutoplayed] = useState(false);
-
+  const navigate = useNavigate();
+  const observerRef = useRef(null);
+  
   useEffect(() => {
-    const observer = new IntersectionObserver(
+    observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
+          if (entry.isIntersecting && videoRef.current) {
             if (!hasAutoplayed) {
               videoRef.current.play();
               setIsPlaying(true);
               setHasAutoplayed(true);
             }
-          } else {
+          } else if (videoRef.current) {
             videoRef.current.pause();
             setIsPlaying(false);
           }
@@ -36,12 +39,13 @@ const OnboardingVideoSection = ({
     );
 
     if (videoRef.current) {
-      observer.observe(videoRef.current);
+      observerRef.current.observe(videoRef.current);
     }
 
     return () => {
-      if (videoRef.current) {
-        observer.unobserve(videoRef.current);
+      // Cleanup: disconnect the observer
+      if (observerRef.current) {
+        observerRef.current.disconnect();
       }
     };
   }, [hasAutoplayed]);
@@ -69,6 +73,8 @@ const OnboardingVideoSection = ({
         delay: 0,
         smooth: "easeInOutQuart",
       });
+    } else {
+      navigate("/create");
     }
   };
 
