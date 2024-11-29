@@ -1,0 +1,44 @@
+footer {
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  footer a {
+    color: #fff;
+    font-size: 32px;
+    transition: transform 0.2s, color 0.2s;
+  }
+  
+  footer a:hover {
+    transform: scale(1.2);
+  }
+  
+  footer a:hover .twitter {
+    color: #1DA1F2;
+  }
+  
+  footer a:hover .coffee {
+    color: #FFDD00;
+  }
+  
+  footer a:hover .github {
+    color: #333;
+  }
+  
+  footer a:hover .linkedin {
+    color: #0077B5;
+  }
+  
+  footer .social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  footer .mail-link {
+    font-size: 16px;
+    text-decoration: none;
+    color: #fff;
+  }

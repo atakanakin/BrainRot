@@ -1,0 +1,62 @@
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 20px;
+    background-color: #333;
+    color: #fff;
+  }
+  
+  header .logo-title {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  
+  header .logo-title img {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+  }
+  
+  header .buttons {
+    display: flex;
+    align-items: center;
+  }
+  
+  header .buttons a,
+  header .buttons button {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    padding: 10px;
+    background-color: #555;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s;
+  }
+  
+  header .buttons a:hover,
+  header .buttons button:hover {
+    background-color: #777;
+  }
+  
+  header .buttons .heart-icon {
+    margin-right: 5px;
+    transition: fill 0.2s;
+  }
+  
+  header .buttons .create-button:hover .heart-icon {
+    fill: red;
+  }
+  
+  header .buttons .plus-icon {
+    margin-right: 5px;
+  }
+  
+  header .buttons .create-button:hover .plus-icon {
+    fill: lightblue;
+  }
