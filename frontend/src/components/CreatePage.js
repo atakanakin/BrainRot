@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import "../styles/CreatePage.css";
 import { FaRegPauseCircle, FaRegPlayCircle } from "react-icons/fa";
+import UploadSection from "./UploadSection";
 
 const videos = {
   "Minecraft": "https://gitlab.com/atakanakin/shortvideos/-/raw/main/minecraft_short.mp4",
@@ -88,11 +89,7 @@ const CreatePage = () => {
 
         {/* Upload Section */}
         <div className="upload-section">
-          <h2>{t("upload_title")}</h2>
-          <p>{t("upload_description")}</p>
-          <button onClick={handleUpload} className="upload-btn">
-            {t("upload_button")}
-          </button>
+          <UploadSection />
         </div>
       </div>
     </div>
