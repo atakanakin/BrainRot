@@ -4,10 +4,10 @@ import "../styles/CreatePage.css";
 import { FaRegPauseCircle, FaRegPlayCircle } from "react-icons/fa";
 
 const videos = {
-  "Subway Surfers": "https://www.w3schools.com/html/mov_bbb.mp4", // TODO: Replace with your video sources
-  "Minecraft": "https://www.w3schools.com/html/movie.mp4",
-  "Satisfying": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-  "GTA5": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+  "Minecraft": "https://gitlab.com/atakanakin/shortvideos/-/raw/main/minecraft_short.mp4",
+  "Subway Surfers": "https://gitlab.com/atakanakin/shortvideos/-/raw/main/subway_surfers_short.mp4",
+  "GTA5": "https://gitlab.com/atakanakin/shortvideos/-/raw/main/gta_short.mp4",
+  "Satisfying": "https://gitlab.com/atakanakin/shortvideos/-/raw/main/satisfy_short.mp4",
 };
 
 const CreatePage = () => {
