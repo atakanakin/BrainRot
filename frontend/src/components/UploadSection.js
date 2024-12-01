@@ -8,7 +8,7 @@ import "../styles/UploadSection.css";
 const acceptedFormats = [".pdf", ".docx", ".pptx", ".txt"];
 const MAX_FILE_SIZE_MB = 20;
 
-const UploadSection = () => {
+const UploadSection = ({onWorkflowComplete}) => {
   const { t } = useTranslation();
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -74,12 +74,20 @@ const UploadSection = () => {
             setBackendStatus(t("processing_complete"));
             setIsUploading(false);
             clearInterval(interval);
+            // Pass filenames to CreatePage
+            if (result.files) {
+              onWorkflowComplete(result.files.audio_file, result.files.subtitle_file);
+            }
 
-            if (result.text_file) {
-              setTextFileName(result.text_file.split("/").pop());
-              const textResponse = await fetch(result.text_file);
-              const text = await textResponse.text();
-              setTextContent(text);
+            if (result.files?.text_file) {
+              setTextFileName(result.files.text_file);
+              const textResponse = await fetch(`http://localhost:5000/file/${result.files.text_file}`);
+              if (textResponse.ok) {
+                const text = await textResponse.text();
+                setTextContent(text);
+              } else {
+                console.error("Failed to fetch the text file");
+              }
             }
           } else if (result.status === "FAILED") {
             setBackendStatus(t("status_error"));
