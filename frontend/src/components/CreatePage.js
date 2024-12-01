@@ -42,10 +42,6 @@ const CreatePage = () => {
     setIsPlaying(true);
   };
 
-  const handleUpload = () => {
-    alert(t("upload_placeholder")); // TODO: Implement upload functionality
-  };
-
   return (
     <div
       className="create-page"
