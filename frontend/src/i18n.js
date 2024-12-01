@@ -17,7 +17,9 @@ i18n.use(initReactI18next).init({
         upload_failed: "Failed to upload file. Please try again.",
         file_too_large: "The file exceeds the maximum allowed size of {{maxSize}} MB.",
         processing_file: "File '{{fileName}}' is being processed. Please wait...",
-        file_processing_complete: "File '{{fileName}}' processing is complete.",
+        extracting_text: "Extracting text...",
+        generating_audio: "Generating audio...",
+        status_error: "Error fetching status. Please try again.",
       }
     },
     tr: {
@@ -33,7 +35,9 @@ i18n.use(initReactI18next).init({
         upload_failed: "Dosya yüklenemedi. Lütfen tekrar deneyin.",
         file_too_large: "Dosya, izin verilen maksimum {{maxSize}} MB boyutunu aşıyor.",
         processing_file: "Dosya '{{fileName}}' işleniyor. Lütfen bekleyin...",
-        file_processing_complete: "Dosya '{{fileName}}' işlemi tamamlandı.",        
+        extracting_text: "Metin çıkarılıyor...",
+        generating_audio: "Ses oluşturuluyor...",
+        status_error: "Durum alınırken hata oluştu. Lütfen tekrar deneyin.",   
       }
     }
   },
