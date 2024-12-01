@@ -6,3 +6,5 @@ PyPDF2==3.0.1
 python-docx==0.8.11
 beautifulsoup4==4.12.2
 python-pptx==0.6.21
+edge-tts==6.1.19
+langdetect==1.0.9

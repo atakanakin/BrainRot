@@ -4,7 +4,7 @@ import docx
 from bs4 import BeautifulSoup
 from pptx import Presentation
 
-def extract_text_from_file(input_path, output_dir):
+def extract_text(input_path, output_dir):
     """
     Extract text from a given file and save it as a .txt file.
 
@@ -15,7 +15,6 @@ def extract_text_from_file(input_path, output_dir):
     Returns:
         str: Path to the generated .txt file.
     """
-    os.makedirs(output_dir, exist_ok=True)
 
     file_name, file_extension = os.path.splitext(os.path.basename(input_path))
     file_extension = file_extension.lower()
