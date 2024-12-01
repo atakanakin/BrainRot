@@ -1,5 +1,5 @@
 .upload-container {
-  width: 80%;
+  width: 90%;
   height: 80%;
   border: 2px dashed #555;
   border-radius: 10px;
@@ -58,7 +58,7 @@
   background-color: #eaeaea;
   border: 1px solid #ccc;
   border-radius: 10px;
-  margin: 20px 0;
+  margin: 0 0;
   padding: 15px;
   overflow: hidden;
   overflow-y: auto;

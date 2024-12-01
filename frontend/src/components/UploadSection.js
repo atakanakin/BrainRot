@@ -75,11 +75,15 @@ const UploadSection = () => {
             setIsUploading(false);
             clearInterval(interval);
 
-            if (result.text_file) {
-              setTextFileName(result.text_file.split("/").pop());
-              const textResponse = await fetch(result.text_file);
-              const text = await textResponse.text();
-              setTextContent(text);
+            if (result.files?.text_file) {
+              setTextFileName(result.files.text_file);
+              const textResponse = await fetch(`http://localhost:5000/file/${result.files.text_file}`);
+              if (textResponse.ok) {
+                const text = await textResponse.text();
+                setTextContent(text);
+              } else {
+                console.error("Failed to fetch the text file");
+              }
             }
           } else if (result.status === "FAILED") {
             setBackendStatus(t("status_error"));
