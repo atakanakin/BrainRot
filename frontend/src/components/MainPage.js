@@ -1,32 +1,28 @@
 import React, { useState } from "react";
 import OnboardingVideoSection from "./OnboardingVideoSection";
-import Header from "./Header";
-import Footer from "./Footer";
 import "../styles/MainPage.css";
 
-// TODO: Replace with your video source
-const videoSrc = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
 
 const sections = [
   {
-    id: "section1",
-    videoSrc,
+    id: "section0",
+    videoSrc: "https://gitlab.com/atakanakin/shortvideos/-/raw/main/minecraft_short.mp4",
     title: "First Section Title",
     body: "This is the body text for the first section.",
     reverse: false,
     backgroundColor: "#f5f5f5",
   },
   {
-    id: "section2",
-    videoSrc,
+    id: "section1",
+    videoSrc: "https://gitlab.com/atakanakin/shortvideos/-/raw/main/subway_surfers_short.mp4",
     title: "Second Section Title",
     body: "This is the body text for the second section.",
     reverse: true,
     backgroundColor: "#e3e3e3",
   },
   {
-    id: "section3",
-    videoSrc,
+    id: "section2",
+    videoSrc: "https://gitlab.com/atakanakin/shortvideos/-/raw/main/gta_short.mp4",
     title: "Third Section Title",
     body: "This is the body text for the third section.",
     reverse: false,

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { scroller } from "react-scroll";
 import { useNavigate } from "react-router-dom";
+import "../styles/OnboardingVideoSection.css";
 
 const OnboardingVideoSection = ({
   id,
@@ -18,7 +19,7 @@ const OnboardingVideoSection = ({
   const [hasAutoplayed, setHasAutoplayed] = useState(false);
   const navigate = useNavigate();
   const observerRef = useRef(null);
-  
+
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -43,7 +44,6 @@ const OnboardingVideoSection = ({
     }
 
     return () => {
-      // Cleanup: disconnect the observer
       if (observerRef.current) {
         observerRef.current.disconnect();
       }
@@ -81,75 +81,31 @@ const OnboardingVideoSection = ({
   return (
     <div
       id={id}
-      style={{
-        display: "flex",
-        flexDirection: reverse ? "row-reverse" : "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        backgroundColor: backgroundColor,
-        padding: "50px",
-        minHeight: "100vh",
-      }}
+      className={`onboarding-video-section ${reverse ? "reverse" : ""}`}
+      style={{ backgroundColor: backgroundColor,
+        paddingTop: id === "section0" ? "100px" : "20px",
+       }}
     >
-      <div style={{ position: "relative", width: "40%" }}>
+      <div className="video-container">
         <video
           ref={videoRef}
           src={videoSrc}
           playsInline
           onEnded={handleVideoEnd}
-          style={{
-            width: "100%",
-            maxHeight: "80vh",
-            objectFit: "cover",
-            borderRadius: "10px",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-          }}
+          className="video-element"
         />
-        <div
-          style={{
-            position: "absolute",
-            bottom: "10px",
-            left: "10px",
-            display: "flex",
-            gap: "10px",
-          }}
-        >
-          <button
-            onClick={togglePlayPause}
-            style={{
-              padding: "10px",
-              backgroundColor: "#000",
-              color: "#fff",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
-          >
+        <div className="video-controls">
+          <button onClick={togglePlayPause} className="control-button">
             {isPlaying ? "Pause" : "Play"}
           </button>
-          <button
-            onClick={toggleMute}
-            style={{
-              padding: "10px",
-              backgroundColor: "#000",
-              color: "#fff",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
-          >
+          <button onClick={toggleMute} className="control-button">
             {isMuted ? "Unmute" : "Mute"}
           </button>
         </div>
       </div>
-      <div
-        style={{
-          width: "50%",
-          textAlign: "center",
-        }}
-      >
-        <h2 style={{ marginBottom: "20px", fontSize: "2em" }}>{title}</h2>
-        <p style={{ fontSize: "1.2em", lineHeight: "1.6" }}>{body}</p>
+      <div className="text-container">
+        <h2 className="section-title">{title}</h2>
+        <p className="section-body">{body}</p>
       </div>
     </div>
   );
