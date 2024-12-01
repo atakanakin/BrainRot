@@ -13,7 +13,11 @@ i18n.use(initReactI18next).init({
         choose_file: "Choose a file",
         file_uploaded: "File '{{fileName}}' uploaded successfully.",
         invalid_file: "Invalid file type. Please upload a supported file.",
-        uploaded_file: "Uploaded File",
+        uploading_file: "Uploading file...",
+        upload_failed: "Failed to upload file. Please try again.",
+        file_too_large: "The file exceeds the maximum allowed size of {{maxSize}} MB.",
+        processing_file: "File '{{fileName}}' is being processed. Please wait...",
+        file_processing_complete: "File '{{fileName}}' processing is complete.",
       }
     },
     tr: {
@@ -25,7 +29,11 @@ i18n.use(initReactI18next).init({
         choose_file: "Bir dosya seçin",
         file_uploaded: "Dosya '{{fileName}}' başarıyla yüklendi.",
         invalid_file: "Geçersiz dosya türü. Lütfen desteklenen bir dosya yükleyin.",
-        uploaded_file: "Yüklenen Dosya",
+        uploading_file: "Dosya yükleniyor...",
+        upload_failed: "Dosya yüklenemedi. Lütfen tekrar deneyin.",
+        file_too_large: "Dosya, izin verilen maksimum {{maxSize}} MB boyutunu aşıyor.",
+        processing_file: "Dosya '{{fileName}}' işleniyor. Lütfen bekleyin...",
+        file_processing_complete: "Dosya '{{fileName}}' işlemi tamamlandı.",        
       }
     }
   },
