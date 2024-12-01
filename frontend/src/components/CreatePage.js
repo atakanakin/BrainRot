@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import "../styles/CreatePage.css";
 import { FaRegPauseCircle, FaRegPlayCircle } from "react-icons/fa";
 import UploadSection from "./UploadSection";
+import sampleSubtitle from "../assets/sample.vtt";
+import { WebVTT } from "vtt.js";
 
 const videos = {
   "Minecraft": "https://gitlab.com/atakanakin/shortvideos/-/raw/main/minecraft_short.mp4",
@@ -16,8 +18,13 @@ const CreatePage = () => {
   const [currentVideo, setCurrentVideo] = useState(Object.values(videos)[0]);
   const [isPlaying, setIsPlaying] = useState(true);
   const [showIndicator, setShowIndicator] = useState(false);
+  const [audioSrc, setAudioSrc] = useState(null);
+  const [subtitleText, setSubtitleText] = useState("");
+  const [isSubtitleError, setIsSubtitleError] = useState(false);
   const videoRef = useRef(null);
+  const audioRef = useRef(null);
   const [headerHeight, setHeaderHeight] = useState(0);
+  const subtitleCues = useRef([]);
 
   useEffect(() => {
     const header = document.querySelector("header");
@@ -26,11 +33,52 @@ const CreatePage = () => {
     }
   }, []);
 
+  useEffect(() => {
+    fetch(sampleSubtitle)
+      .then(response => response.text())
+      .then(vttText => {
+        const parser = new WebVTT.Parser(window, WebVTT.StringDecoder());
+        parser.oncue = cue => {
+          subtitleCues.current.push(cue);
+        };
+        parser.parse(vttText);
+        parser.flush();
+      })
+      .catch(error => {
+        console.error("Error loading subtitles:", error);
+        setIsSubtitleError(true);
+      });
+  }, []);
+
+  useEffect(() => {
+    const handleTimeUpdate = () => {
+      if (audioRef.current) {
+        const currentTime = audioRef.current.currentTime;
+        const currentCue = subtitleCues.current.find(
+          cue => cue.startTime <= currentTime && cue.endTime >= currentTime
+        );
+        setSubtitleText(currentCue ? currentCue.text : "");
+      }
+    };
+
+    if (audioRef.current) {
+      audioRef.current.addEventListener("timeupdate", handleTimeUpdate);
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener("timeupdate", handleTimeUpdate);
+      }
+    };
+  }, [audioSrc]);
+
   const handleVideoClick = () => {
     if (isPlaying) {
       videoRef.current.pause();
+      if (audioRef.current) audioRef.current.pause();
     } else {
       videoRef.current.play();
+      if (audioRef.current) audioRef.current.play();
     }
     setIsPlaying(!isPlaying);
     setShowIndicator(true);
@@ -40,10 +88,20 @@ const CreatePage = () => {
   const handleVideoChange = (key) => {
     setCurrentVideo(videos[key]);
     setIsPlaying(true);
+    if (audioRef.current) audioRef.current.play();
   };
 
-  const handleUpload = () => {
-    alert(t("upload_placeholder")); // TODO: Implement upload functionality
+  const handleWorkflowComplete = async (audioFile, subtitleFile) => {
+    try {
+      const audioUrl = `http://localhost:5000/file/${audioFile}`;
+      setAudioSrc(audioUrl);
+      setIsPlaying(true);
+      videoRef.current.play();
+      if (audioRef.current) audioRef.current.play();
+    } catch (error) {
+      console.error("Error loading subtitles:", error);
+      setIsSubtitleError(true);
+    }
   };
 
   return (
@@ -61,17 +119,33 @@ const CreatePage = () => {
             <video
               ref={videoRef}
               src={currentVideo}
-              onEnded={() => videoRef.current.play()}
+              onEnded={() => {
+                setIsPlaying(true);
+                videoRef.current.play();
+                if (audioRef.current) audioRef.current.play();
+              }}
               autoPlay
-              muted
               className="video-element"
             />
+            {audioSrc && (
+              <audio
+                ref={audioRef}
+                src={audioSrc}
+                autoPlay
+                loop
+                style={{ display: "none" }}
+              />
+            )}
             {showIndicator && (
               <div className="play-pause-indicator">
                 {isPlaying ? <FaRegPlayCircle /> : <FaRegPauseCircle />}
               </div>
             )}
+            <div className="subtitle">{subtitleText}</div>
           </div>
+          {isSubtitleError && (
+            <p className="error-message">{t("subtitle_load_error")}</p>
+          )}
           <div className="slider">
             {Object.keys(videos).map((key, index) => (
               <button
@@ -89,7 +163,7 @@ const CreatePage = () => {
 
         {/* Upload Section */}
         <div className="upload-section">
-          <UploadSection />
+          <UploadSection onWorkflowComplete={handleWorkflowComplete} />
         </div>
       </div>
     </div>

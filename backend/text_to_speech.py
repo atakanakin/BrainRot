@@ -18,7 +18,7 @@ def text_to_speech(input_path: str, output_dir: str) -> tuple[str, str]:
 
     file_name, _ = os.path.splitext(os.path.basename(input_path))
     audio_output_path = os.path.join(output_dir, f"{file_name}.mp3")
-    subtitle_output_path = os.path.join(output_dir, f"{file_name}.srt")
+    subtitle_output_path = os.path.join(output_dir, f"{file_name}.vtt")
 
     with open(input_path, "r", encoding="utf-8") as file:
         text = file.read()

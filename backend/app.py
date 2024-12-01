@@ -101,16 +101,43 @@ def unified_status(task_id):
     elif task.state == 'GENERATING_AUDIO':
         return jsonify({"status": "GENERATING_AUDIO"}), 202
     elif task.state == 'SUCCESS':
+        result = task.result
         return jsonify({
             "status": "COMPLETED",
-            "text_file": task.result["text_file"],
-            "audio_file": task.result["audio_file"],
-            "subtitle_file": task.result["subtitle_file"],
+            "files": {
+                "text_file": os.path.basename(result["text_file"]),
+                "audio_file": os.path.basename(result["audio_file"]),
+                "subtitle_file": os.path.basename(result["subtitle_file"]),
+            },
         }), 200
     elif task.state == 'FAILED':
         return jsonify({"status": "FAILED", "error": task.info.get("error", "Unknown error")}), 500
     else:
         return jsonify({"status": "UNKNOWN"}), 500
+    
+@app.route('/file/<filename>', methods=['GET'])
+def serve_file(filename):
+    """
+    Serve a file securely based on its filename.
+
+    Args:
+        filename (str): Name of the file requested.
+
+    Returns:
+        Response: The requested file, or an error if not found.
+    """
+    extracted_folder = app.config['EXTRACTED_FOLDER']
+    converted_folder = app.config['CONVERTED_FOLDER']
+
+    if filename.endswith(".txt"):
+        file_path = os.path.join(extracted_folder, filename)
+    else:
+        file_path = os.path.join(converted_folder, filename)
+    
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return send_file(file_path, as_attachment=True)
+    else:
+        return jsonify({"error": "File not found or unauthorized access"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
