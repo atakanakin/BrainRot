@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+
 .create-page {
     display: flex;
     flex-direction: column;
@@ -115,6 +117,22 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
+  }
+
+  .subtitle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 900;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    z-index: 10;
+    font-family: 'Montserrat', sans-serif;
+    letter-spacing: -1.0px; /* Decrease letter spacing */
   }
   
 @media (max-width: 768px) {

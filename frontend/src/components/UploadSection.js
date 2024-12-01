@@ -8,7 +8,7 @@ import "../styles/UploadSection.css";
 const acceptedFormats = [".pdf", ".docx", ".pptx", ".txt"];
 const MAX_FILE_SIZE_MB = 20;
 
-const UploadSection = () => {
+const UploadSection = ({onWorkflowComplete}) => {
   const { t } = useTranslation();
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -74,6 +74,10 @@ const UploadSection = () => {
             setBackendStatus(t("processing_complete"));
             setIsUploading(false);
             clearInterval(interval);
+            // Pass filenames to CreatePage
+            if (result.files) {
+              onWorkflowComplete(result.files.audio_file, result.files.subtitle_file);
+            }
 
             if (result.files?.text_file) {
               setTextFileName(result.files.text_file);
