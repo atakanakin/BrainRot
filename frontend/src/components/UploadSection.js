@@ -45,6 +45,7 @@ const UploadSection = ({onWorkflowComplete}) => {
         const response = await fetch("http://localhost:5000/upload", {
           method: "POST",
           body: formData,
+          mode: "cors",
         });
 
         if (!response.ok) {
@@ -67,7 +68,12 @@ const UploadSection = ({onWorkflowComplete}) => {
     if (taskId) {
       interval = setInterval(async () => {
         try {
-          const response = await fetch(`http://localhost:5000/status/${taskId}`);
+          const response = await fetch(`http://localhost:5000/status/${taskId}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
           const result = await response.json();
 
           if (result.status === "COMPLETED") {
@@ -78,10 +84,15 @@ const UploadSection = ({onWorkflowComplete}) => {
             if (result.files) {
               onWorkflowComplete(result.files.audio_file, result.files.subtitle_file);
             }
-
-            if (result.files?.text_file) {
+            console.log(result.files);
+            if (result.files.text_file) {
               setTextFileName(result.files.text_file);
-              const textResponse = await fetch(`http://localhost:5000/file/${result.files.text_file}`);
+              const textResponse = await fetch(`http://localhost:5000/file/${result.files.text_file}`, {
+                method: "GET",
+                headers: {
+                  "Content-Type": "text/plain",
+                },
+              });
               if (textResponse.ok) {
                 const text = await textResponse.text();
                 setTextContent(text);
