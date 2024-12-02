@@ -15,7 +15,7 @@
 .video-container {
   position: relative;
   flex: 1;
-  max-width: 30%;
+  max-width: 27%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -26,24 +26,34 @@
   max-height: 80vh;
   object-fit: cover;
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.75);
 }
 
 .video-controls {
   position: absolute;
   bottom: 10px;
-  left: 10px;
+  width: 100%;
   display: flex;
-  gap: 10px;
+  justify-content: space-between;
 }
 
 .control-button {
-  padding: 10px;
-  background-color: #000;
-  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  margin: 10px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #e5e5e5;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.control-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 .text-container {
@@ -56,11 +66,13 @@
 .section-title {
   margin-bottom: 20px;
   font-size: 2em;
+  color: #e5e5e5;
 }
 
 .section-body {
   font-size: 1.2em;
   line-height: 1.6;
+  color: #b9b9b9;
 }
 
 @media (max-width: 768px) {

@@ -20,6 +20,8 @@ i18n.use(initReactI18next).init({
         extracting_text: "Extracting text...",
         generating_audio: "Generating audio...",
         status_error: "Error fetching status. Please try again.",
+        note_text: "Note:",
+        processing_limit: "For now, a maximum of 2 minutes of text can be processed. You can sponsor <a>here</a> and help us contribute to this project so that we can increase our processing limits."
       }
     },
     tr: {
@@ -37,7 +39,9 @@ i18n.use(initReactI18next).init({
         processing_file: "Dosya '{{fileName}}' işleniyor. Lütfen bekleyin...",
         extracting_text: "Metin çıkarılıyor...",
         generating_audio: "Ses oluşturuluyor...",
-        status_error: "Durum alınırken hata oluştu. Lütfen tekrar deneyin.",   
+        status_error: "Durum alınırken hata oluştu. Lütfen tekrar deneyin.",
+        note_text: "Not:",
+        processing_limit: "Şimdilik maksimum 2 dakikalık metin işlenebiliyor. Bize <a>buradan</a> sponsor olabilir ve bu projeye katkıda bulunarak işleme sınırlarımızı artırmamıza yardımcı olabilirsiniz."
       }
     }
   },
