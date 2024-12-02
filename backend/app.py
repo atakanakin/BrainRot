@@ -7,7 +7,18 @@ from extract_text import extract_text
 from text_to_speech import text_to_speech
 
 app = Flask(__name__)
-CORS(app)
+
+FRONTEND_URL = "http://localhost:3000"
+
+CORS(
+    app,
+    resources={
+        r"/*": {"origins": [FRONTEND_URL]}
+    },
+    methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
+    expose_headers=["Content-Disposition"],
+)
 
 # config
 app.config['UPLOAD_FOLDER'] = './uploads'
@@ -59,9 +70,31 @@ def process_file(self, filename):
     except Exception as e:
         self.update_state(state="FAILED", meta={"error": str(e)})
         raise e
+    
+@app.after_request
+def add_security_headers(response):
+    # CORS Headers
+    response.headers["Access-Control-Allow-Origin"] = FRONTEND_URL
+    response.headers["Access-Control-Allow-Credentials"] = "false"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
+    
+    # Security Headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
-@app.route('/upload', methods=['POST'])
+    return response
+
+@app.route('/upload', methods=['POST', 'OPTIONS'])
 def upload_file():
+    if request.method == 'OPTIONS':
+        # Handle preflight request
+        response = jsonify({"message": "CORS preflight request successful"})
+        response.status_code = 204
+        return response
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
     file = request.files['file']
@@ -140,4 +173,4 @@ def serve_file(filename):
         return jsonify({"error": "File not found or unauthorized access"}), 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
