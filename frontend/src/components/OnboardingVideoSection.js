@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { scroller } from "react-scroll";
 import { useNavigate } from "react-router-dom";
 import "../styles/OnboardingVideoSection.css";
+import { FaPause, FaPlay, FaVolumeMute, FaVolumeUp } from "react-icons/fa";
 
 const OnboardingVideoSection = ({
   id,
@@ -82,9 +83,10 @@ const OnboardingVideoSection = ({
     <div
       id={id}
       className={`onboarding-video-section ${reverse ? "reverse" : ""}`}
-      style={{ backgroundColor: backgroundColor,
+      style={{
+        backgroundColor: backgroundColor,
         paddingTop: id === "section0" ? "100px" : "20px",
-       }}
+      }}
     >
       <div className="video-container">
         <video
@@ -96,10 +98,10 @@ const OnboardingVideoSection = ({
         />
         <div className="video-controls">
           <button onClick={togglePlayPause} className="control-button">
-            {isPlaying ? "Pause" : "Play"}
+            {isPlaying ? <FaPause /> : <FaPlay />}
           </button>
           <button onClick={toggleMute} className="control-button">
-            {isMuted ? "Unmute" : "Mute"}
+            {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
           </button>
         </div>
       </div>

@@ -4,11 +4,14 @@ import { FaFileUpload } from "react-icons/fa";
 import Lottie from "lottie-react";
 import uploadingAnimation from "../assets/loading_lottie.json";
 import "../styles/UploadSection.css";
+import { buyMeaCoffee } from "../constants/SocialMedia";
+import { useNavigate } from "react-router-dom";
+import { API_URL } from "../constants/Url";
 
 const acceptedFormats = [".pdf", ".docx", ".pptx", ".txt"];
 const MAX_FILE_SIZE_MB = 20;
 
-const UploadSection = ({onWorkflowComplete}) => {
+const UploadSection = ({ onWorkflowComplete }) => {
   const { t } = useTranslation();
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -42,7 +45,7 @@ const UploadSection = ({onWorkflowComplete}) => {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("http://localhost:5000/upload", {
+        const response = await fetch(`${API_URL}/upload`, {
           method: "POST",
           body: formData,
           mode: "cors",
@@ -68,7 +71,7 @@ const UploadSection = ({onWorkflowComplete}) => {
     if (taskId) {
       interval = setInterval(async () => {
         try {
-          const response = await fetch(`http://localhost:5000/status/${taskId}`, {
+          const response = await fetch(`${API_URL}/status/${taskId}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -87,7 +90,7 @@ const UploadSection = ({onWorkflowComplete}) => {
             console.log(result.files);
             if (result.files.text_file) {
               setTextFileName(result.files.text_file);
-              const textResponse = await fetch(`http://localhost:5000/file/${result.files.text_file}`, {
+              const textResponse = await fetch(`${API_URL}/file/${result.files.text_file}`, {
                 method: "GET",
                 headers: {
                   "Content-Type": "text/plain",
@@ -150,10 +153,32 @@ const UploadSection = ({onWorkflowComplete}) => {
 
       {textContent && (
         <div className="text-content-container">
+          {/* Create New Button */}
+          <button
+            className="create-new-button"
+            onClick={() => window.location.reload()}
+          >
+            Create New
+          </button>
+
+          {/* Text Content */}
           <h3 className="text-content-title">{textFileName}</h3>
           <div className="text-content">
             <pre>{textContent}</pre>
           </div>
+          {/* Additional Information */}
+          <p className="info-text">
+            <strong>{t("note_text")}</strong>{" "}
+            <span
+              dangerouslySetInnerHTML={{
+                __html: t("processing_limit").replace(
+                  "<a>",
+                  `<a href="${buyMeaCoffee}" target="_blank" rel="noopener noreferrer" class="sponsor-link">`
+                )
+              }}
+            />
+          </p>
+
         </div>
       )}
     </div>

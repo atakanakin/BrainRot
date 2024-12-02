@@ -4,6 +4,7 @@ import "../styles/CreatePage.css";
 import { FaRegPauseCircle, FaRegPlayCircle } from "react-icons/fa";
 import UploadSection from "./UploadSection";
 import { WebVTT } from "vtt.js";
+import { API_URL } from "../constants/Url";
 
 const videos = {
   "Minecraft": "https://gitlab.com/atakanakin/shortvideos/-/raw/main/minecraft_short.mp4",
@@ -95,8 +96,8 @@ const CreatePage = () => {
 
   const handleWorkflowComplete = async (audioFile, subtitleFile) => {
     try {
-      const audioUrl = `http://localhost:5000/file/${audioFile}`;
-      const subtitleSrc = `http://localhost:5000/file/${subtitleFile}`;
+      const audioUrl = `${API_URL}/file/${audioFile}`;
+      const subtitleSrc = `${API_URL}/file/${subtitleFile}`;
       setAudioSrc(audioUrl);
       setSubtitleSrc(subtitleSrc)
       setIsPlaying(true);

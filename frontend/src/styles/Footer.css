@@ -1,12 +1,12 @@
 footer {
-    background-color: #333;
-    color: #fff;
+    background-color: #141414;
+    color: #E5E5E5;
     padding: 20px;
     text-align: center;
   }
   
   footer a {
-    color: #fff;
+    color: #E5E5E5;
     font-size: 32px;
     transition: transform 0.2s, color 0.2s;
   }
@@ -24,7 +24,7 @@ footer {
   }
   
   footer a:hover .github {
-    color: #333;
+    color: #AAA;
   }
   
   footer a:hover .linkedin {
@@ -40,5 +40,5 @@ footer {
   footer .mail-link {
     font-size: 16px;
     text-decoration: none;
-    color: #fff;
+    color: #E5E5E5;
   }

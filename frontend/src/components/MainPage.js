@@ -10,7 +10,7 @@ const sections = [
     title: "First Section Title",
     body: "This is the body text for the first section.",
     reverse: false,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#2A2A2A",
   },
   {
     id: "section1",
@@ -18,7 +18,7 @@ const sections = [
     title: "Second Section Title",
     body: "This is the body text for the second section.",
     reverse: true,
-    backgroundColor: "#e3e3e3",
+    backgroundColor: "#202020",
   },
   {
     id: "section2",
@@ -26,7 +26,7 @@ const sections = [
     title: "Third Section Title",
     body: "This is the body text for the third section.",
     reverse: false,
-    backgroundColor: "#d1d1d1",
+    backgroundColor: "#141414",
   },
 ];
 
