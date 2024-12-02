@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import "../styles/CreatePage.css";
 import { FaRegPauseCircle, FaRegPlayCircle } from "react-icons/fa";
 import UploadSection from "./UploadSection";
-import sampleSubtitle from "../assets/sample.vtt";
 import { WebVTT } from "vtt.js";
 
 const videos = {
@@ -19,6 +18,7 @@ const CreatePage = () => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [showIndicator, setShowIndicator] = useState(false);
   const [audioSrc, setAudioSrc] = useState(null);
+  const [subtitleSrc, setSubtitleSrc] = useState(null)
   const [subtitleText, setSubtitleText] = useState("");
   const [isSubtitleError, setIsSubtitleError] = useState(false);
   const videoRef = useRef(null);
@@ -34,21 +34,23 @@ const CreatePage = () => {
   }, []);
 
   useEffect(() => {
-    fetch(sampleSubtitle)
-      .then(response => response.text())
-      .then(vttText => {
-        const parser = new WebVTT.Parser(window, WebVTT.StringDecoder());
-        parser.oncue = cue => {
-          subtitleCues.current.push(cue);
-        };
-        parser.parse(vttText);
-        parser.flush();
-      })
-      .catch(error => {
-        console.error("Error loading subtitles:", error);
-        setIsSubtitleError(true);
-      });
-  }, []);
+    if (subtitleSrc) {
+      fetch(subtitleSrc)
+        .then(response => response.text())
+        .then(vttText => {
+          const parser = new WebVTT.Parser(window, WebVTT.StringDecoder());
+          parser.oncue = cue => {
+            subtitleCues.current.push(cue);
+          };
+          parser.parse(vttText);
+          parser.flush();
+        })
+        .catch(error => {
+          console.error("Error loading subtitles:", error);
+          setIsSubtitleError(true);
+        });
+    }
+  }, [subtitleSrc]);
 
   useEffect(() => {
     const handleTimeUpdate = () => {
@@ -94,7 +96,9 @@ const CreatePage = () => {
   const handleWorkflowComplete = async (audioFile, subtitleFile) => {
     try {
       const audioUrl = `http://localhost:5000/file/${audioFile}`;
+      const subtitleSrc = `http://localhost:5000/file/${subtitleFile}`;
       setAudioSrc(audioUrl);
+      setSubtitleSrc(subtitleSrc)
       setIsPlaying(true);
       videoRef.current.play();
       if (audioRef.current) audioRef.current.play();
