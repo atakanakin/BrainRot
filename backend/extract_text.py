@@ -26,12 +26,26 @@ def extract_text(input_path, output_dir):
     output_path = os.path.join(output_dir, f"{file_name}.txt")
 
     def save_text(content):
-        words = content.split()
-        limited_content = " ".join(words[:MAX_WORD_COUNT])
-        word_count = len(words)
+        paragraphs = content.split("\n")
+        limited_content = []
+        word_count = 0
+
+        for paragraph in paragraphs:
+            paragraph_words = paragraph.split()
+            if word_count + len(paragraph_words) <= MAX_WORD_COUNT:
+                limited_content.append(paragraph)
+                word_count += len(paragraph_words)
+            else:
+                remaining_words = MAX_WORD_COUNT - word_count
+                if remaining_words > 0:
+                    limited_content.append(" ".join(paragraph_words[:remaining_words]))
+                    word_count += remaining_words
+                break
+
+        formatted_content = "\n".join(limited_content)
         with open(output_path, "w", encoding="utf-8") as file:
-            file.write(limited_content)
-            file.write(f"\n\nWord Count: {word_count}")
+            file.write(formatted_content)
+
         return output_path
 
     if file_extension == ".txt":
