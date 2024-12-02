@@ -4,6 +4,10 @@ import docx
 from bs4 import BeautifulSoup
 from pptx import Presentation
 
+WORDS_PER_MINUTE = 150  # avg words per minute
+MAX_SPEECH_DURATION_MINUTES = 2
+MAX_WORD_COUNT = WORDS_PER_MINUTE * MAX_SPEECH_DURATION_MINUTES
+
 def extract_text(input_path, output_dir):
     """
     Extract text from a given file and save it as a .txt file.
@@ -21,19 +25,24 @@ def extract_text(input_path, output_dir):
 
     output_path = os.path.join(output_dir, f"{file_name}.txt")
 
+    def save_text(content):
+        words = content.split()
+        limited_content = " ".join(words[:MAX_WORD_COUNT])
+        word_count = len(words)
+        with open(output_path, "w", encoding="utf-8") as file:
+            file.write(limited_content)
+            file.write(f"\n\nWord Count: {word_count}")
+        return output_path
+
     if file_extension == ".txt":
         with open(input_path, "r", encoding="utf-8") as file:
             content = file.read()
-        with open(output_path, "w", encoding="utf-8") as file:
-            file.write(content)
-        return output_path
+        return save_text(content)
 
     elif file_extension == ".docx":
         doc = docx.Document(input_path)
         content = "\n".join([para.text for para in doc.paragraphs])
-        with open(output_path, "w", encoding="utf-8") as file:
-            file.write(content)
-        return output_path
+        return save_text(content)
 
     elif file_extension == ".pdf":
         content = []
@@ -41,9 +50,7 @@ def extract_text(input_path, output_dir):
             reader = PyPDF2.PdfReader(file)
             for page in reader.pages:
                 content.append(page.extract_text())
-        with open(output_path, "w", encoding="utf-8") as file:
-            file.write("\n".join(content))
-        return output_path
+        return save_text("\n".join(content))
 
     elif file_extension == ".pptx":
         presentation = Presentation(input_path)
@@ -52,17 +59,13 @@ def extract_text(input_path, output_dir):
             for shape in slide.shapes:
                 if shape.has_text_frame:
                     content.append(shape.text)
-        with open(output_path, "w", encoding="utf-8") as file:
-            file.write("\n".join(content))
-        return output_path
+        return save_text("\n".join(content))
 
     elif file_extension == ".html":
         with open(input_path, "r", encoding="utf-8") as file:
             soup = BeautifulSoup(file, "html.parser")
         text = soup.get_text(separator="\n")
-        with open(output_path, "w", encoding="utf-8") as file:
-            file.write(text)
-        return output_path
+        return save_text(text)
 
     else:
         raise ValueError(f"Unsupported file format: {file_extension}")
