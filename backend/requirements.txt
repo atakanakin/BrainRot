@@ -8,3 +8,6 @@ beautifulsoup4==4.12.2
 python-pptx==0.6.21
 edge-tts==6.1.19
 langdetect==1.0.9
+moviepy==2.1.1
+webvtt-py==0.5.1
+gunicorn==23.0.0

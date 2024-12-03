@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import MainPage from "./components/MainPage";
 import CreatePage from "./components/CreatePage";
 import Header from "./components/Header";
@@ -16,6 +16,7 @@ const App = () => {
                         {/* Define routes for the main page and the create page */}
                         <Route path="/" element={<MainPage />} />
                         <Route path="/create" element={<CreatePage />} />
+                        <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
                 </div>
                 <Footer />

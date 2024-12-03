@@ -76,6 +76,7 @@ const OnboardingVideoSection = ({
       });
     } else {
       navigate("/create");
+      window.scrollTo(0, 0);
     }
   };
 

@@ -8,7 +8,9 @@ from text_to_speech import text_to_speech
 
 app = Flask(__name__)
 
-FRONTEND_URL = "http://localhost:3000"
+# get frontend URL from environment variable
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
 
 CORS(
     app,
@@ -32,8 +34,8 @@ os.makedirs(app.config['EXTRACTED_FOLDER'], exist_ok=True)
 os.makedirs(app.config['CONVERTED_FOLDER'], exist_ok=True)
 
 # Celery
-app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+app.config['CELERY_BROKER_URL'] = BROKER_URL
+app.config['CELERY_RESULT_BACKEND'] = BROKER_URL
 
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
@@ -172,5 +174,5 @@ def serve_file(filename):
     else:
         return jsonify({"error": "File not found or unauthorized access"}), 404
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+# if __name__ == '__main__':
+#     app.run(debug=True, host='0.0.0.0', port=5000)
