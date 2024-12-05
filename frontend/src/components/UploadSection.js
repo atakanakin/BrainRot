@@ -103,6 +103,10 @@ const UploadSection = ({ onWorkflowComplete }) => {
                 console.error("Failed to fetch the text file");
               }
             }
+          } else if (result.status === "PENDING") {
+            setBackendStatus(t("pending_status"));
+          } else if (result.status === "UNKNOWN") {
+            setBackendStatus(t("unknown_status"));
           } else if (result.status === "FAILED") {
             setBackendStatus(t("status_error"));
             clearInterval(interval);
@@ -158,7 +162,7 @@ const UploadSection = ({ onWorkflowComplete }) => {
             className="create-new-button"
             onClick={() => window.location.reload()}
           >
-            Create New
+            {t("create_new")}
           </button>
 
           {/* Text Content */}

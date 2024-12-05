@@ -23,6 +23,14 @@ const Header = () => {
                 <h1 style={{ margin: 0 }}>{t('app_name')}</h1>
             </div>
             <div className="buttons">
+            <select 
+                    value={i18n.language}
+                    onChange={(e) => changeLanguage(e.target.value)}
+                    className="lang-select"
+                >
+                    <option value="en">English</option>
+                    <option value="tr">Türkçe</option>
+                </select>
                 <button onClick={() =>
                     window.open(buyMeaCoffee, "_blank")
                 } className="create-button">
