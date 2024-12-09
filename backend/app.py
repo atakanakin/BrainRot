@@ -1,4 +1,4 @@
-import os
+import os, jwt
 import uuid
 import datetime
 from flask import Flask, request, jsonify, send_file, redirect, session
@@ -11,12 +11,17 @@ from models import db, User
 from google_auth_oauthlib.flow import Flow
 from google.oauth2 import id_token
 from google.auth.transport.requests import Request
+from datetime import timedelta, datetime
+from functools import wraps
 
 load_dotenv()
 
 app = Flask(__name__)
 
 # config
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
 app.secret_key = os.getenv("SECRET_KEY")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -85,6 +90,37 @@ def process_file(self, filename):
     except Exception as e:
         self.update_state(state="FAILED", meta={"error": str(e)})
         raise e
+    
+def create_tokens(user_id):
+    """Create access and refresh tokens"""
+    access_token = jwt.encode({
+        'user_id': user_id,
+        'exp': datetime.utcnow() + app.config['JWT_ACCESS_TOKEN_EXPIRES']
+    }, app.config['JWT_SECRET_KEY'])
+    
+    refresh_token = jwt.encode({
+        'user_id': user_id,
+        'exp': datetime.utcnow() + app.config['JWT_REFRESH_TOKEN_EXPIRES']
+    }, app.config['JWT_SECRET_KEY'])
+    
+    return access_token, refresh_token
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'error': 'No token provided'}), 401
+        try:
+            token = token.split(' ')[1]
+            payload = jwt.decode(token, app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
+            request.user_id = payload['user_id']
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 401
+        return f(*args, **kwargs)
+    return decorated
 
 
 @app.after_request
@@ -198,81 +234,139 @@ def serve_file(filename):
         return jsonify({"error": "File not found or unauthorized access"}), 404
 
 
-@app.route("/google-login", methods=["GET"])
+@app.route("/google-login")
 def google_login():
-    flow = Flow.from_client_config(
-        {
-            "web": {
-                "client_id": GOOGLE_CLIENT_ID,
-                "client_secret": GOOGLE_CLIENT_SECRET,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [REDIRECT_URI],
-            }
-        },
-        scopes=[
-            "openid",
-            "https://www.googleapis.com/auth/userinfo.email",
-            "https://www.googleapis.com/auth/userinfo.profile",
-        ],
-    )
-    flow.redirect_uri = REDIRECT_URI
-    authorization_url, state = flow.authorization_url()
-    session["state"] = state
-    return redirect(authorization_url)
-
-
-@app.route("/oauth2callback", methods=["GET"])
-def oauth2callback():
-    flow = Flow.from_client_config(
-        {
-            "web": {
-                "client_id": GOOGLE_CLIENT_ID,
-                "client_secret": GOOGLE_CLIENT_SECRET,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [REDIRECT_URI],
-            }
-        },
-        scopes=[
-            "openid",
-            "https://www.googleapis.com/auth/userinfo.email",
-            "https://www.googleapis.com/auth/userinfo.profile",
-        ],
-    )
-    flow.redirect_uri = REDIRECT_URI
-    flow.fetch_token(authorization_response=request.url)
-
-    credentials = flow.credentials
-    idinfo = id_token.verify_oauth2_token(
-        credentials.id_token, Request(), GOOGLE_CLIENT_ID
-    )
-
-    user = User.query.filter_by(google_id=idinfo["sub"]).first()
-    if not user:
-        user = User(
-            google_id=idinfo["sub"],
-            name=idinfo["name"],
-            email=idinfo["email"],
-            token=credentials.token,
-            last_login=datetime.datetime.now(datetime.timezone.utc),
+    try:
+        flow = Flow.from_client_config(
+            {
+                "web": {
+                    "client_id": GOOGLE_CLIENT_ID,
+                    "client_secret": GOOGLE_CLIENT_SECRET,
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "redirect_uris": [REDIRECT_URI],
+                }
+            },
+            scopes=["openid", "https://www.googleapis.com/auth/userinfo.email", 
+                   "https://www.googleapis.com/auth/userinfo.profile"]
         )
-        db.session.add(user)
-    else:
-        user.token = credentials.token
-        user.last_login = datetime.datetime.now(datetime.timezone.utc)
-    db.session.commit()
+        flow.redirect_uri = REDIRECT_URI
+        authorization_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true',
+            prompt='consent'
+        )
+        session["state"] = state
+        return redirect(authorization_url)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    return jsonify(
-        {
+@app.route("/oauth2callback")
+def oauth2callback():
+    try:
+        if request.args.get('state') != session.get('state'):
+            return jsonify({"error": "Invalid state parameter"}), 401
+
+        flow = Flow.from_client_config(
+            {
+                "web": {
+                    "client_id": GOOGLE_CLIENT_ID,
+                    "client_secret": GOOGLE_CLIENT_SECRET,
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "redirect_uris": [REDIRECT_URI],
+                }
+            },
+            scopes=["openid", "https://www.googleapis.com/auth/userinfo.email", 
+                   "https://www.googleapis.com/auth/userinfo.profile"]
+        )
+        flow.redirect_uri = REDIRECT_URI
+        flow.fetch_token(authorization_response=request.url)
+
+        credentials = flow.credentials
+        idinfo = id_token.verify_oauth2_token(
+            credentials.id_token, Request(), GOOGLE_CLIENT_ID
+        )
+        user = User.query.filter_by(google_id=idinfo["sub"]).first()
+        if not user:
+            user = User(
+                google_id=idinfo["sub"],
+                name=idinfo["name"],
+                email=idinfo["email"],
+                token=credentials.token
+            )
+            db.session.add(user)
+        else:
+            user.update_token(credentials.token)
+            user.update_last_login()
+
+        db.session.commit()
+        
+        access_token, refresh_token = create_tokens(user.id)
+        
+        return jsonify({
             "message": "Login successful",
+            "access_token": access_token,
+            "refresh_token": refresh_token,
             "user": {
+                "id": user.id,
                 "name": user.name,
                 "email": user.email,
-                "last_login": user.last_login,
-            },
-        }
-    )
+                "is_premium": user.is_premium,
+                "remaining_tokens": user.remaining_create_tokens,
+                "last_login": user.last_login.isoformat()
+            }
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/refresh-token", methods=["POST"])
+def refresh_token():
+    try:
+        refresh_token = request.json.get('refresh_token')
+        if not refresh_token:
+            return jsonify({"error": "No refresh token provided"}), 401
+
+        payload = jwt.decode(refresh_token, app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
+        user = User.query.get(payload['user_id'])
+        
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        access_token, new_refresh_token = create_tokens(user.id)
+        
+        return jsonify({
+            "access_token": access_token,
+            "refresh_token": new_refresh_token
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 401
+    
+@app.route("/user/status")
+@login_required
+def get_user_status():
+    try:
+        user = User.query.get(request.user_id)
+        return jsonify({
+            "is_premium": user.is_premium,
+            "remaining_tokens": user.remaining_create_tokens,
+            "name": user.name,
+            "email": user.email
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/logout", methods=["POST"])
+@login_required
+def logout():
+    try:
+        user = User.query.get(request.user_id)
+        user.update_last_login()
+        return jsonify({"message": "Logged out successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
