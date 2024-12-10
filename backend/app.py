@@ -11,8 +11,11 @@ from models import db, User
 from google_auth_oauthlib.flow import Flow
 from google.oauth2 import id_token
 from google.auth.transport.requests import Request
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, UTC
 from functools import wraps
+
+# TODO: remove this line in production
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 load_dotenv()
 
@@ -22,7 +25,7 @@ app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
-app.secret_key = os.getenv("SECRET_KEY")
+app.secret_key = os.getenv("SECRET_KEY", "default_secret_key")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["UPLOAD_FOLDER"] = "./uploads"
@@ -41,6 +44,7 @@ CORS(
     app,
     resources={r"/*": {"origins": [FRONTEND_URL]}},
     methods=["GET", "POST", "OPTIONS"],
+    supports_credentials=True,
     allow_headers=["Content-Type", "Authorization"],
     expose_headers=["Content-Disposition"],
 )
@@ -95,12 +99,12 @@ def create_tokens(user_id):
     """Create access and refresh tokens"""
     access_token = jwt.encode({
         'user_id': user_id,
-        'exp': datetime.utcnow() + app.config['JWT_ACCESS_TOKEN_EXPIRES']
+        'exp': datetime.now(UTC) + app.config['JWT_ACCESS_TOKEN_EXPIRES']
     }, app.config['JWT_SECRET_KEY'])
     
     refresh_token = jwt.encode({
         'user_id': user_id,
-        'exp': datetime.utcnow() + app.config['JWT_REFRESH_TOKEN_EXPIRES']
+        'exp': datetime.now(UTC) + app.config['JWT_REFRESH_TOKEN_EXPIRES']
     }, app.config['JWT_SECRET_KEY'])
     
     return access_token, refresh_token
@@ -108,24 +112,39 @@ def create_tokens(user_id):
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        if not token:
+        # Get the token from cookies
+        access_token = request.cookies.get('access_token')  # Read token from cookies
+        refresh_token = request.cookies.get('refresh_token')
+        if not access_token:
             return jsonify({'error': 'No token provided'}), 401
         try:
-            token = token.split(' ')[1]
-            payload = jwt.decode(token, app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
+            # Decode the JWT token
+            payload = jwt.decode(access_token, app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
             request.user_id = payload['user_id']
         except jwt.ExpiredSignatureError:
-            return jsonify({'error': 'Token expired'}), 401
+            # Did the token expire?
+            if not refresh_token:
+                raise jwt.InvalidTokenError
+            payload = jwt.decode(refresh_token, app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
+            request.user_id = payload['user_id']
+            # Create a new access token
+            access_token, refresh_token = create_tokens(request.user_id)
+            response = f(*args, **kwargs)
+            # TODO: make secure=True in production
+            response.set_cookie('access_token', access_token, httponly=True, secure=False, samesite='Strict', path='/', max_age=3600)
+            return response
         except jwt.InvalidTokenError:
             return jsonify({'error': 'Invalid token'}), 401
+        # If the token is valid, proceed with the request
         return f(*args, **kwargs)
     return decorated
+
 
 
 @app.after_request
 def add_security_headers(response):
     response.headers["Access-Control-Allow-Origin"] = FRONTEND_URL
+    response.headers["Access-Control-Allow-Credentials"] = "true"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
@@ -139,6 +158,7 @@ def add_security_headers(response):
 
 
 @app.route("/upload", methods=["POST", "OPTIONS"])
+@login_required
 def upload_file():
     if request.method == "OPTIONS":
         # Handle preflight request
@@ -163,6 +183,7 @@ def upload_file():
 
 
 @app.route("/status/<task_id>", methods=["GET"])
+@login_required
 def unified_status(task_id):
     """
     Unified endpoint to check the status of the file processing pipeline.
@@ -210,6 +231,7 @@ def unified_status(task_id):
 
 
 @app.route("/file/<filename>", methods=["GET"])
+@login_required
 def serve_file(filename):
     """
     Serve a file securely based on its filename.
@@ -304,59 +326,48 @@ def oauth2callback():
         
         access_token, refresh_token = create_tokens(user.id)
         
-        return jsonify({
-            "message": "Login successful",
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "user": {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "is_premium": user.is_premium,
-                "remaining_tokens": user.remaining_create_tokens,
-                "last_login": user.last_login.isoformat()
-            }
-        })
+        response = redirect(FRONTEND_URL+"/#/create")
+        # TODO: make secure=True in production
+        response.set_cookie(
+            "access_token", 
+            access_token,
+            httponly=True,
+            secure=False,  # Set True in production
+            samesite='Strict',
+            path='/',
+            max_age=3600  # 1 hour
+        )
+        # TODO: make secure=True in production
+        response.set_cookie(
+            "refresh_token",
+            refresh_token,
+            httponly=True,
+            secure=False,  # Set True in production
+            samesite='Strict',
+            path='/',
+            max_age=2592000  # 30 days
+        )
+        return response
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return redirect(FRONTEND_URL + "/login?error=login_failed")
     
-@app.route("/refresh-token", methods=["POST"])
-def refresh_token():
-    try:
-        refresh_token = request.json.get('refresh_token')
-        if not refresh_token:
-            return jsonify({"error": "No refresh token provided"}), 401
-
-        payload = jwt.decode(refresh_token, app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
-        user = User.query.get(payload['user_id'])
-        
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-
-        access_token, new_refresh_token = create_tokens(user.id)
-        
-        return jsonify({
-            "access_token": access_token,
-            "refresh_token": new_refresh_token
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 401
-    
-@app.route("/user/status")
+@app.route("/user/status", methods=["GET"])
 @login_required
-def get_user_status():
+def user_status():
     try:
         user = User.query.get(request.user_id)
         return jsonify({
-            "is_premium": user.is_premium,
-            "remaining_tokens": user.remaining_create_tokens,
+            "id": user.id,
             "name": user.name,
-            "email": user.email
+            "email": user.email,
+            "is_premium": user.is_premium,
+            "remaining_tokens": user.remaining_create_tokens
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/logout", methods=["POST"])
 @login_required
@@ -364,7 +375,23 @@ def logout():
     try:
         user = User.query.get(request.user_id)
         user.update_last_login()
-        return jsonify({"message": "Logged out successfully"})
+        response = jsonify({"message": "Logged out successfully"})
+        # Clear cookies by setting them to expire immediately
+        response.set_cookie('access_token', '', 
+            expires=0, 
+            httponly=True, 
+            secure=False,  # Set True in production
+            samesite='Strict',
+            path='/'
+        )
+        response.set_cookie('refresh_token', '',
+            expires=0,
+            httponly=True, 
+            secure=False,  # Set True in production
+            samesite='Strict',
+            path='/'
+        )
+        return response
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

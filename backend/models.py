@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 import datetime
+import uuid
 
 # init
 db = SQLAlchemy()
@@ -11,6 +12,7 @@ utc_plus_3 = datetime.timezone(datetime.timedelta(hours=3))
 # user
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    secure_id = db.Column(db.String(36), default=str(uuid.uuid4()), unique=True, nullable=False)
     google_id = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
@@ -52,13 +54,12 @@ class User(db.Model):
         self.update_last_login()
         db.session.commit()
 
-    def use_create_token(self):
+    def use_create_token(self, amount=1):
         """Use one create token if available"""
-        if self.remaining_create_tokens <= 0 and not self.is_premium:
+        if self.remaining_create_tokens <= amount:
             return False
-        if not self.is_premium:
-            self.remaining_create_tokens -= 1
-            db.session.commit()
+        self.remaining_create_tokens -= amount
+        db.session.commit()
         return True
 
     def add_create_tokens(self, amount):
@@ -68,6 +69,6 @@ class User(db.Model):
         return self.remaining_create_tokens
 
     @property
-    def can_create(self):
+    def can_create(self, amount=1):
         """Check if user can create new items"""
-        return self.remaining_create_tokens > 0
+        return self.remaining_create_tokens >= amount
