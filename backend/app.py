@@ -14,6 +14,8 @@ from google.auth.transport.requests import Request
 from datetime import timedelta, datetime, UTC
 from functools import wraps
 
+WORDS_PER_TOKEN = 100
+
 # TODO: remove this line in production
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
@@ -61,7 +63,7 @@ db.init_app(app)
 
 
 @celery.task(bind=True)
-def process_file(self, filename):
+def process_file(self, filename, user: User):
     """
     Celery task to process a file by extracting text and converting it to speech.
 
@@ -75,13 +77,21 @@ def process_file(self, filename):
         # Stage 1: Extract text
         self.update_state(state="EXTRACTING_TEXT")
         input_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        text_file = extract_text(input_path, app.config["EXTRACTED_FOLDER"])
+        text_file, word_count = extract_text(input_path, app.config["EXTRACTED_FOLDER"])
+
+        # Check if the user has enough tokens
+        token_cost = round(word_count / WORDS_PER_TOKEN)
+        if user.can_create(token_cost):
+            raise Exception("Insufficient tokens, please consider upgrading.")
 
         # Stage 2: Convert text to speech
         self.update_state(state="GENERATING_AUDIO")
         audio_path, subtitle_path = text_to_speech(
             text_file, app.config["CONVERTED_FOLDER"]
         )
+
+        # Update user token count
+        user.use_create(token_cost)
 
         # Success
         return {
@@ -202,8 +212,11 @@ def upload_file():
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], unique_filename)
     file.save(filepath)
 
+    # user
+    user = get_user_from_id(request.user_id)
+
     # queue
-    task = process_file.delay(unique_filename)
+    task = process_file.delay(unique_filename, user)
 
     return jsonify({"message": "File uploaded", "task_id": task.id}), 202
 
