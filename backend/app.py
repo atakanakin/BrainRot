@@ -14,6 +14,8 @@ from google.auth.transport.requests import Request
 from datetime import timedelta, datetime, UTC
 from functools import wraps
 
+WORDS_PER_TOKEN = 100
+
 # TODO: remove this line in production
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
@@ -61,7 +63,7 @@ db.init_app(app)
 
 
 @celery.task(bind=True)
-def process_file(self, filename):
+def process_file(self, filename, user: User):
     """
     Celery task to process a file by extracting text and converting it to speech.
 
@@ -75,13 +77,21 @@ def process_file(self, filename):
         # Stage 1: Extract text
         self.update_state(state="EXTRACTING_TEXT")
         input_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        text_file = extract_text(input_path, app.config["EXTRACTED_FOLDER"])
+        text_file, word_count = extract_text(input_path, app.config["EXTRACTED_FOLDER"])
+
+        # Check if the user has enough tokens
+        token_cost = round(word_count / WORDS_PER_TOKEN)
+        if user.can_create(token_cost):
+            raise Exception("Insufficient tokens, please consider upgrading.")
 
         # Stage 2: Convert text to speech
         self.update_state(state="GENERATING_AUDIO")
         audio_path, subtitle_path = text_to_speech(
             text_file, app.config["CONVERTED_FOLDER"]
         )
+
+        # Update user token count
+        user.use_create(token_cost)
 
         # Success
         return {
@@ -95,16 +105,32 @@ def process_file(self, filename):
         self.update_state(state="FAILED", meta={"error": str(e)})
         raise e
     
+def get_user_from_id(user_id):
+    """Get user object from secure_id"""
+    return User.query.filter_by(secure_id=user_id).first()
+    
 def create_tokens(user_id):
-    """Create access and refresh tokens"""
+    """Create access and refresh tokens with different claims"""
+    now = datetime.now(UTC)
+    
+    # Access token - contains more info but shorter lifetime
     access_token = jwt.encode({
         'user_id': user_id,
-        'exp': datetime.now(UTC) + app.config['JWT_ACCESS_TOKEN_EXPIRES']
+        'type': 'access',
+        'jti': str(uuid.uuid4()),  # unique token id
+        'iat': now.timestamp(),    # issued at
+        'exp': (now + app.config['JWT_ACCESS_TOKEN_EXPIRES']).timestamp(),
+        'scope': 'api:access'      # token scope
     }, app.config['JWT_SECRET_KEY'])
     
+    # Refresh token - minimal info but longer lifetime
     refresh_token = jwt.encode({
         'user_id': user_id,
-        'exp': datetime.now(UTC) + app.config['JWT_REFRESH_TOKEN_EXPIRES']
+        'type': 'refresh',
+        'jti': str(uuid.uuid4()),
+        'iat': now.timestamp(),
+        'exp': (now + app.config['JWT_REFRESH_TOKEN_EXPIRES']).timestamp(),
+        'scope': 'api:refresh'
     }, app.config['JWT_SECRET_KEY'])
     
     return access_token, refresh_token
@@ -120,19 +146,29 @@ def login_required(f):
         try:
             # Decode the JWT token
             payload = jwt.decode(access_token, app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
+            # Verify token type
+            if payload.get('type') != 'access':
+                raise jwt.InvalidTokenError('Invalid token type')
             request.user_id = payload['user_id']
         except jwt.ExpiredSignatureError:
             # Did the token expire?
             if not refresh_token:
                 raise jwt.InvalidTokenError
-            payload = jwt.decode(refresh_token, app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
-            request.user_id = payload['user_id']
-            # Create a new access token
-            access_token, refresh_token = create_tokens(request.user_id)
-            response = f(*args, **kwargs)
-            # TODO: make secure=True in production
-            response.set_cookie('access_token', access_token, httponly=True, secure=False, samesite='Strict', path='/', max_age=3600)
-            return response
+            try:
+                payload = jwt.decode(refresh_token, app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
+                # Verify refresh token type
+                if payload.get('type') != 'refresh':
+                    raise jwt.InvalidTokenError('Invalid refresh token type')
+                request.user_id = payload['user_id']
+                # Create a new access token
+                access_token, refresh_token = create_tokens(request.user_id)
+                response = f(*args, **kwargs)
+                # TODO: make secure=True in production
+                response.set_cookie('access_token', access_token, httponly=True, secure=False, samesite='Strict', path='/', max_age=3600)
+                response.set_cookie('refresh_token', refresh_token, httponly=True, secure=False, samesite='Strict', path='/', max_age=2592000)
+                return response
+            except jwt.InvalidTokenError:
+                return jsonify({'error': 'Invalid refresh token'}), 401
         except jwt.InvalidTokenError:
             return jsonify({'error': 'Invalid token'}), 401
         # If the token is valid, proceed with the request
@@ -176,8 +212,11 @@ def upload_file():
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], unique_filename)
     file.save(filepath)
 
+    # user
+    user = get_user_from_id(request.user_id)
+
     # queue
-    task = process_file.delay(unique_filename)
+    task = process_file.delay(unique_filename, user)
 
     return jsonify({"message": "File uploaded", "task_id": task.id}), 202
 
@@ -324,7 +363,7 @@ def oauth2callback():
 
         db.session.commit()
         
-        access_token, refresh_token = create_tokens(user.id)
+        access_token, refresh_token = create_tokens(user.secure_id)
         
         response = redirect(FRONTEND_URL+"/#/create")
         # TODO: make secure=True in production
@@ -357,7 +396,9 @@ def oauth2callback():
 @login_required
 def user_status():
     try:
-        user = User.query.get(request.user_id)
+        user = get_user_from_id(request.user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
         return jsonify({
             "id": user.id,
             "name": user.name,
@@ -373,7 +414,7 @@ def user_status():
 @login_required
 def logout():
     try:
-        user = User.query.get(request.user_id)
+        user = get_user_from_id(request.user_id)
         user.update_last_login()
         response = jsonify({"message": "Logged out successfully"})
         # Clear cookies by setting them to expire immediately
