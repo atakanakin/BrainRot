@@ -49,6 +49,7 @@ const UploadSection = ({ onWorkflowComplete }) => {
           method: "POST",
           body: formData,
           mode: "cors",
+          credentials: 'include',
         });
 
         if (!response.ok) {
@@ -76,6 +77,7 @@ const UploadSection = ({ onWorkflowComplete }) => {
             headers: {
               "Content-Type": "application/json",
             },
+            credentials: 'include',
           });
           const result = await response.json();
 
@@ -95,6 +97,7 @@ const UploadSection = ({ onWorkflowComplete }) => {
                 headers: {
                   "Content-Type": "text/plain",
                 },
+                credentials: 'include',
               });
               if (textResponse.ok) {
                 const text = await textResponse.text();
@@ -108,7 +111,7 @@ const UploadSection = ({ onWorkflowComplete }) => {
           } else if (result.status === "UNKNOWN") {
             setBackendStatus(t("unknown_status"));
           } else if (result.status === "FAILED") {
-            setBackendStatus(t("status_error"));
+            setBackendStatus(t("status_error") + ": " + result.message);
             clearInterval(interval);
           } else {
             setBackendStatus(t(result.status.toLowerCase()));

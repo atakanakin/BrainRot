@@ -36,7 +36,11 @@ const CreatePage = () => {
 
   useEffect(() => {
     if (subtitleSrc) {
-      fetch(subtitleSrc)
+      fetch(subtitleSrc, {
+        method: "GET",
+        mode: "cors",
+        credentials: 'include',
+      })
         .then(response => response.text())
         .then(vttText => {
           const parser = new WebVTT.Parser(window, WebVTT.StringDecoder());
@@ -96,15 +100,23 @@ const CreatePage = () => {
 
   const handleWorkflowComplete = async (audioFile, subtitleFile) => {
     try {
-      const audioUrl = `${API_URL}/file/${audioFile}`;
+      const audioResponse = await fetch(`${API_URL}/file/${audioFile}`, {
+        method: "GET",
+        credentials: 'include'
+      });
+      const audioBlob = await audioResponse.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
       const subtitleSrc = `${API_URL}/file/${subtitleFile}`;
       setAudioSrc(audioUrl);
       setSubtitleSrc(subtitleSrc)
       setIsPlaying(true);
       videoRef.current.play();
-      if (audioRef.current) audioRef.current.play();
+      if (audioRef.current) {
+        audioRef.current.crossOrigin = "use-credentials";
+        audioRef.current.play();
+      }
     } catch (error) {
-      console.error("Error loading subtitles:", error);
+      console.error("Error loading media:", error);
       setIsSubtitleError(true);
     }
   };
