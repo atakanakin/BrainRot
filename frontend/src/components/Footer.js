@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { FaTwitter, FaCoffee, FaGithub, FaLinkedin } from "react-icons/fa";
 import { mail, twitter, buyMeaCoffee, github, linkedin } from "../constants/SocialMedia";
 import "../styles/Footer.css";
@@ -7,7 +8,10 @@ const Footer = () => {
     return (
         <footer>
             <p><a href={mail} className="mail-link">contact@atakanakin.com.tr</a></p>
-            <p>&copy; 2024 Ali Atakan Akın</p>
+            <div className="copyright-container">
+                <p>&copy; 2024 Ali Atakan Akın</p>
+                <Link to="/privacy-policy" className="privacy-link">Privacy Policy</Link>
+            </div>
             <div className="social-icons">
                 <a href={github} target="_blank" rel="noopener noreferrer">
                     <FaGithub className="github" />

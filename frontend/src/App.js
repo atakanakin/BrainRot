@@ -9,6 +9,7 @@ import {LoginPage} from "./components/LoginPage";
 import {PrivateRoute} from "./components/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
 import './i18n';
+import PrivacyPolicyPage from "./components/PrivacyPolicyPage";
 
 const App = () => {
     return (
@@ -27,6 +28,7 @@ const App = () => {
                         <Route path="/dashboard" element={<PrivateRoute>
                 <DashboardPage />
               </PrivateRoute>} />
+                        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                         <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
                 </div>

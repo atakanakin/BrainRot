@@ -17,7 +17,7 @@ from functools import wraps
 WORDS_PER_TOKEN = 100
 
 # TODO: remove this line in production
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+# os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 load_dotenv()
 
@@ -38,6 +38,7 @@ app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024  # 20 MB limit
 # Frontend and Celery configurations
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI", "http://localhost:5000/oauth2callback")
@@ -56,14 +57,14 @@ os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 os.makedirs(app.config["EXTRACTED_FOLDER"], exist_ok=True)
 os.makedirs(app.config["CONVERTED_FOLDER"], exist_ok=True)
 
-celery = Celery(app.name, broker=BROKER_URL)
+celery = Celery(app.name, broker=BROKER_URL, backend=RESULT_BACKEND)
 celery.conf.update(app.config)
 
 db.init_app(app)
 
 
 @celery.task(bind=True)
-def process_file(self, filename, user: User):
+def process_file(self, filename, user_id):
     """
     Celery task to process a file by extracting text and converting it to speech.
 
@@ -73,37 +74,42 @@ def process_file(self, filename, user: User):
     Returns:
         dict: Paths to the processed text, audio, and subtitle files.
     """
-    try:
-        # Stage 1: Extract text
-        self.update_state(state="EXTRACTING_TEXT")
-        input_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        text_file, word_count = extract_text(input_path, app.config["EXTRACTED_FOLDER"])
+    with app.app_context():
+        try:
+            # Stage 1: Extract text
+            self.update_state(state="EXTRACTING_TEXT")
+            input_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            text_file, word_count = extract_text(input_path, app.config["EXTRACTED_FOLDER"])
 
-        # Check if the user has enough tokens
-        token_cost = round(word_count / WORDS_PER_TOKEN)
-        if user.can_create(token_cost):
-            raise Exception("Insufficient tokens, please consider upgrading.")
+            # Check if the user has enough tokens
+            user: User = get_user_from_id(user_id)
+            token_cost = round(word_count / WORDS_PER_TOKEN)
+            if not user.use_create_token(token_cost):
+               raise Exception(f"Insufficient tokens: {token_cost} required")
 
-        # Stage 2: Convert text to speech
-        self.update_state(state="GENERATING_AUDIO")
-        audio_path, subtitle_path = text_to_speech(
-            text_file, app.config["CONVERTED_FOLDER"]
-        )
+            # Stage 2: Convert text to speech
+            self.update_state(state="GENERATING_AUDIO")
+            audio_path, subtitle_path = text_to_speech(
+                text_file, app.config["CONVERTED_FOLDER"]
+            )
 
-        # Update user token count
-        user.use_create(token_cost)
+            # Update user's file list
+            user_file = os.path.splitext(os.path.basename(text_file))[0]
+            user.add_file(user_file)
 
-        # Success
-        return {
-            "status": "COMPLETED",
-            "text_file": text_file,
-            "audio_file": audio_path,
-            "subtitle_file": subtitle_path,
-        }
+            # Success
+            return {
+                "status": "COMPLETED",
+                "text_file": text_file,
+                "audio_file": audio_path,
+                "subtitle_file": subtitle_path,
+            }
 
-    except Exception as e:
-        self.update_state(state="FAILED", meta={"error": str(e)})
-        raise e
+        except Exception as e:
+            return {
+                "status": "FAILED",
+                "error": str(e)
+            }
     
 def get_user_from_id(user_id):
     """Get user object from secure_id"""
@@ -164,8 +170,8 @@ def login_required(f):
                 access_token, refresh_token = create_tokens(request.user_id)
                 response = f(*args, **kwargs)
                 # TODO: make secure=True in production
-                response.set_cookie('access_token', access_token, httponly=True, secure=False, samesite='Strict', path='/', max_age=3600)
-                response.set_cookie('refresh_token', refresh_token, httponly=True, secure=False, samesite='Strict', path='/', max_age=2592000)
+                response.set_cookie('access_token', access_token, httponly=True, secure=True, samesite='Strict', path='/', max_age=3600)
+                response.set_cookie('refresh_token', refresh_token, httponly=True, secure=True, samesite='Strict', path='/', max_age=2592000)
                 return response
             except jwt.InvalidTokenError:
                 return jsonify({'error': 'Invalid refresh token'}), 401
@@ -212,11 +218,8 @@ def upload_file():
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], unique_filename)
     file.save(filepath)
 
-    # user
-    user = get_user_from_id(request.user_id)
-
     # queue
-    task = process_file.delay(unique_filename, user)
+    task = process_file.delay(unique_filename, request.user_id)
 
     return jsonify({"message": "File uploaded", "task_id": task.id}), 202
 
@@ -245,6 +248,8 @@ def unified_status(task_id):
         return jsonify({"status": "GENERATING_AUDIO"}), 202
     elif task.state == "SUCCESS":
         result = task.result
+        if result["status"] == "FAILED":
+            return jsonify({"status": "FAILED", "error": result["error"]}), 500
         return (
             jsonify(
                 {
@@ -371,7 +376,7 @@ def oauth2callback():
             "access_token", 
             access_token,
             httponly=True,
-            secure=False,  # Set True in production
+            secure=True,  # Set True in production
             samesite='Strict',
             path='/',
             max_age=3600  # 1 hour
@@ -381,7 +386,7 @@ def oauth2callback():
             "refresh_token",
             refresh_token,
             httponly=True,
-            secure=False,  # Set True in production
+            secure=True,  # Set True in production
             samesite='Strict',
             path='/',
             max_age=2592000  # 30 days
@@ -437,7 +442,8 @@ def logout():
         return jsonify({"error": str(e)}), 500
 
 
-if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True, host="0.0.0.0", port=5000)
+with app.app_context():
+    db.create_all()
+
+# if __name__ == "__main__":
+#     app.run(debug=True, host="0.0.0.0", port=5000)

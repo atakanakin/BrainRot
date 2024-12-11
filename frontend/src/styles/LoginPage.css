@@ -19,7 +19,7 @@
   height: 30%;
   max-height: 100%;
   text-align: center;
-  animation: fadeIn 0.5s ease-out;
+  animation: fadeIn 1s ease-out;
 }
 
 .login-box h1 {

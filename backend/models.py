@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.types import JSON
 import datetime
 import uuid
 
@@ -22,6 +23,7 @@ class User(db.Model):
     premium_due_date = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.now(utc_plus_3))
     remaining_create_tokens = db.Column(db.Integer, default=20, nullable=False)
+    file_list = db.Column(JSON, default=list, nullable=False)
 
     def __repr__(self):
         return f'<User {self.email}>'
@@ -68,7 +70,18 @@ class User(db.Model):
         db.session.commit()
         return self.remaining_create_tokens
 
-    @property
     def can_create(self, amount=1):
         """Check if user can create new items"""
         return self.remaining_create_tokens >= amount
+    
+    def add_file(self, file_uuid: str):
+        """Add file UUID to user's file list"""
+        if not self.file_list:
+            self.file_list = []
+        self.file_list.append(file_uuid)
+        db.session.commit()
+        return True
+
+    def get_files(self):
+        """Get list of user's files"""
+        return self.file_list or []

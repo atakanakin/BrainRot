@@ -26,32 +26,44 @@
   
   .profile-card {
     grid-column: span 2;
-    align-items: center;
-  }
-  
-  .profile-info {
+    text-align: left;
+    display: flex;           /* Add flex */
+    justify-content: center; /* Center horizontally */
+    align-items: center;     /* Center vertically */
+    min-height: 200px;      /* Ensure minimum height for vertical centering */
+}
+
+.profile-info {
     display: flex;
-    align-items: center;
+    align-items: center;     /* Center items vertically */
+    justify-content: center; /* Center items horizontally */
     gap: 1.5rem;
-    margin-top: 1rem;
-  }
-  
-  .profile-avatar {
+    margin-bottom: 0;        /* Remove bottom margin */
+    width: 100%;            /* Take full width */
+    max-width: 500px;       /* Limit maximum width */
+}
+
+.profile-details {
+    display: flex;          /* Add flex */
+    flex-direction: column; /* Stack children vertically */
+    justify-content: center; /* Center content vertically */
+}
+.profile-avatar {
     width: 80px;
     height: 80px;
     border-radius: 50%;
     object-fit: cover;
-  }
-  
-  .profile-details h3 {
-    margin: 0;
-    color: #333;
-  }
-  
-  .profile-details p {
-    margin: 0.5rem 0;
-    color: #666;
-  }
+}
+
+.profile-details h3,
+.profile-details p {
+    margin: 0;             /* Remove default margins */
+    text-align: left;      /* Keep text left-aligned */
+}
+
+.profile-details p {
+    margin-top: 0.5rem;    /* Add space between name and email */
+}
   
   .token-info {
     text-align: center;
@@ -125,7 +137,9 @@
   .action-buttons {
     display: flex;
     gap: 1rem;
-    margin-top: 1rem;
+    margin-top: 2rem;
+    align-items: center;     /* Center items vertically */
+    justify-content: center;
   }
   
   .action-buttons button {

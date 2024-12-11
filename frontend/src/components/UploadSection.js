@@ -20,6 +20,7 @@ const UploadSection = ({ onWorkflowComplete }) => {
   const [backendStatus, setBackendStatus] = useState("");
   const [textContent, setTextContent] = useState(null);
   const [textFileName, setTextFileName] = useState("");
+  const [error, setError] = useState(null);
 
   const handleFileInputChange = async (e) => {
     const file = e.target.files[0];
@@ -80,6 +81,7 @@ const UploadSection = ({ onWorkflowComplete }) => {
             credentials: 'include',
           });
           const result = await response.json();
+          console.log(result);
 
           if (result.status === "COMPLETED") {
             setBackendStatus(t("processing_complete"));
@@ -106,26 +108,35 @@ const UploadSection = ({ onWorkflowComplete }) => {
                 console.error("Failed to fetch the text file");
               }
             }
-          } else if (result.status === "PENDING") {
-            setBackendStatus(t("pending_status"));
-          } else if (result.status === "UNKNOWN") {
-            setBackendStatus(t("unknown_status"));
           } else if (result.status === "FAILED") {
-            setBackendStatus(t("status_error") + ": " + result.message);
-            clearInterval(interval);
+              setError(result.error);
+              setBackendStatus(t("status_error"));
+              setIsUploading(false); // Stop showing loading
+              clearInterval(interval); // Stop polling
+          } else if (result.status === "PENDING") {
+              setBackendStatus(t("pending_status"));
+          } else if (result.status === "UNKNOWN") {
+              setError("Unknown status");
+              setBackendStatus(t("unknown_status"));
+              setIsUploading(false);
+              clearInterval(interval);
           } else {
-            setBackendStatus(t(result.status.toLowerCase()));
+              setBackendStatus(t(result.status.toLowerCase()));
           }
         } catch (error) {
-          console.error("Error fetching status:", error);
-          setBackendStatus(t("status_error"));
-          clearInterval(interval);
+            console.error("Error fetching status:", error);
+            setError("Error fetching status");
+            setBackendStatus(t("status_error"));
+            setUploadStatus(t("upload_failed"));
+            setIsUploading(false);
+            clearInterval(interval);
         }
       }, 5000); // Poll every 5 seconds
     }
-
+  
     return () => clearInterval(interval);
   }, [taskId, t]);
+  
 
   return (
     <div className="upload-container">
@@ -157,6 +168,21 @@ const UploadSection = ({ onWorkflowComplete }) => {
           <p>{backendStatus || uploadStatus}</p>
         </div>
       )}
+
+      {error && (
+            <div className="error-container">
+              <h3 className="error-title">{t("error_occurred", "An error occurred")}</h3>
+              <p className="error-message">{error}</p>
+              <button
+                className="retry-button"
+                onClick={() => {
+                  window.location.reload();
+                }}
+              >
+                {t("retry", "Retry")}
+              </button>
+            </div>
+          )}
 
       {textContent && (
         <div className="text-content-container">
