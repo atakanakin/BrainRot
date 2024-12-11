@@ -42,3 +42,15 @@ footer {
     text-decoration: none;
     color: #E5E5E5;
   }
+  .copyright-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    justify-content: center;
+}
+
+  .privacy-link {
+    font-size: 12px;
+    text-decoration: none;
+    color: #E5E5E5;
+  }

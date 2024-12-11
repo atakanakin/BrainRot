@@ -5,6 +5,7 @@ import CreatePage from "./components/CreatePage";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import './i18n';
+import PrivacyPolicyPage from "./components/PrivacyPolicyPage";
 
 const App = () => {
     return (
@@ -15,7 +16,14 @@ const App = () => {
                     <Routes>
                         {/* Define routes for the main page and the create page */}
                         <Route path="/" element={<MainPage />} />
-                        <Route path="/create" element={<CreatePage />} />
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/create" element={<PrivateRoute>
+                <CreatePage />
+              </PrivateRoute>} />
+                        <Route path="/dashboard" element={<PrivateRoute>
+                <DashboardPage />
+              </PrivateRoute>} />
+                        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                         <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
                 </div>

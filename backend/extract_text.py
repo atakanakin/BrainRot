@@ -4,9 +4,9 @@ import docx
 from bs4 import BeautifulSoup
 from pptx import Presentation
 
-WORDS_PER_MINUTE = 150  # avg words per minute
-MAX_SPEECH_DURATION_MINUTES = 2
-MAX_WORD_COUNT = WORDS_PER_MINUTE * MAX_SPEECH_DURATION_MINUTES
+# WORDS_PER_MINUTE = 150  # avg words per minute
+# MAX_SPEECH_DURATION_MINUTES = 2
+# MAX_WORD_COUNT = WORDS_PER_MINUTE * MAX_SPEECH_DURATION_MINUTES
 
 def extract_text(input_path, output_dir):
     """
@@ -26,27 +26,11 @@ def extract_text(input_path, output_dir):
     output_path = os.path.join(output_dir, f"{file_name}.txt")
 
     def save_text(content):
-        paragraphs = content.split("\n")
-        limited_content = []
-        word_count = 0
-
-        for paragraph in paragraphs:
-            paragraph_words = paragraph.split()
-            if word_count + len(paragraph_words) <= MAX_WORD_COUNT:
-                limited_content.append(paragraph)
-                word_count += len(paragraph_words)
-            else:
-                remaining_words = MAX_WORD_COUNT - word_count
-                if remaining_words > 0:
-                    limited_content.append(" ".join(paragraph_words[:remaining_words]))
-                    word_count += remaining_words
-                break
-
-        formatted_content = "\n".join(limited_content)
         with open(output_path, "w", encoding="utf-8") as file:
-            file.write(formatted_content)
-
-        return output_path
+            file.write(content)
+        # get the word count
+        word_count = len(content.split(" "))
+        return output_path, word_count
 
     if file_extension == ".txt":
         with open(input_path, "r", encoding="utf-8") as file:

@@ -120,3 +120,35 @@
   color: #ff4d4d;
 }
 
+.error-container {
+  text-align: center;
+  padding: 20px;
+  color: red;
+  margin: 20px auto;
+}
+
+.error-title {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.error-message {
+  margin-top: 10px;
+  font-size: 1em;
+  color: #e5e5e5;
+}
+
+.retry-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 1em;
+  color: #323232;
+  background-color: #e5e5e5;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.retry-button:hover {
+  background-color: red;
+}
