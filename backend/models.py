@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.types import JSON
+from sqlalchemy.ext.mutable import MutableList
 import datetime
 import uuid
 
@@ -23,7 +24,7 @@ class User(db.Model):
     premium_due_date = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.now(utc_plus_3))
     remaining_create_tokens = db.Column(db.Integer, default=20, nullable=False)
-    file_list = db.Column(JSON, default=list, nullable=False)
+    file_list = db.Column(MutableList.as_mutable(JSON), default=list, nullable=False)
 
     def __repr__(self):
         return f'<User {self.email}>'
@@ -74,14 +75,22 @@ class User(db.Model):
         """Check if user can create new items"""
         return self.remaining_create_tokens >= amount
     
-    def add_file(self, file_uuid: str):
-        """Add file UUID to user's file list"""
-        if not self.file_list:
-            self.file_list = []
-        self.file_list.append(file_uuid)
+    def add_file(self, filename: str):
+        """
+        Add a file to the user's file list with metadata.
+        Each file is represented as a JSON object with 'filename' and 'date'.
+        """
+        new_file = {
+            "filename": filename,
+            "date": datetime.datetime.now(utc_plus_3).isoformat()
+        }
+        self.file_list.append(new_file)
+        db.session.add(self)
         db.session.commit()
         return True
-
+    
     def get_files(self):
-        """Get list of user's files"""
-        return self.file_list or []
+        """
+        Get the list of files with metadata.
+        """
+        return self.file_list if isinstance(self.file_list, list) else []
