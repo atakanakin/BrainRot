@@ -409,7 +409,8 @@ def user_status():
             "name": user.name,
             "email": user.email,
             "is_premium": user.is_premium,
-            "remaining_tokens": user.remaining_create_tokens
+            "remaining_tokens": user.remaining_create_tokens,
+            "history": user.get_files()
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
