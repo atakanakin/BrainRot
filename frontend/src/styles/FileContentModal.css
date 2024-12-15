@@ -1,0 +1,82 @@
+.file-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+    overflow: hidden;
+}
+
+.file-modal-content {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    width: 80%;
+    max-width: 70%;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+.file-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+}
+
+.file-modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.file-modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #888;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 0;
+    margin-left: 20px;
+    line-height: 1;
+}
+
+.file-modal-close-btn:hover {
+    color: #000;
+}
+
+.file-modal-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px;
+    background: #f7f7f7;
+    border-radius: 4px;
+    font-family: "Courier New", Courier, monospace;
+    color: #333;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+
+.file-modal-body pre {
+    background: #f7f7f7;
+    padding: 10px;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: "Courier New", Courier, monospace;
+}
