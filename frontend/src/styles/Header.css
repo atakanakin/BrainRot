@@ -22,7 +22,8 @@ header .logo-title {
     font-weight: 700;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
     font-family: 'Montserrat', sans-serif;
-    letter-spacing: -1.0px; /* Decrease letter spacing */
+    letter-spacing: -1.0px;
+    /* Decrease letter spacing */
 }
 
 header .logo-title img {
@@ -53,9 +54,7 @@ header .buttons button {
 }
 
 header .buttons a:hover,
-header .buttons button:hover
-
-header .buttons .heart-icon {
+header .buttons button:hover header .buttons .heart-icon {
     transition: fill 0.2s;
 }
 
@@ -149,4 +148,59 @@ header .lang-select:hover {
 /* Ensure proper spacing between buttons */
 .buttons button {
     margin-left: 12px;
+}
+
+/* Menu icon */
+.menu-icon {
+    display: none;
+}
+
+/* Add this to handle the dropdown behavior */
+.menu-icon {
+    display: none;
+    color: #E5E5E5;
+    cursor: pointer;
+    font-size: 1.5rem;
+    margin-left: auto;
+}
+
+/* First, fix the default buttons display */
+.buttons {
+    display: flex;
+    align-items: center;
+}
+
+/* Then update the mobile media query */
+@media (max-width: 768px) {
+    .menu-icon {
+        display: block;
+    }
+
+    header .buttons {
+        display: none;
+        position: absolute;
+        top: 80px;
+        right: 20px;
+        background-color: #2A2A2A;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        padding: 10px 20px;
+    }
+
+    header .buttons.open {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .buttons>* {
+        width: 100%;
+        margin: 5px 0 !important;
+    }
+
+    .buttons button,
+    header .lang-select {
+        width: auto;
+        align-self: center;
+    }
 }

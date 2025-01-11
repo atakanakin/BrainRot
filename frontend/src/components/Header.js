@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import '../i18n';
 import '../styles/Header.css';
-import { FaHeart, FaPlus, FaUser } from "react-icons/fa";
+import { FaHeart, FaPlus, FaUser, FaBars, FaTimes } from "react-icons/fa";
 import logo from '../assets/brainrot_logo.svg';
 import { useAuth } from '../context/AuthContext';
 import { buyMeaCoffee } from "../constants/SocialMedia";
@@ -13,9 +13,14 @@ const Header = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
+    const [menuOpen, setMenuOpen] = useState(false); // State to toggle dropdown menu
 
     const changeLanguage = (lng) => {
         i18n.changeLanguage(lng);
+    };
+
+    const toggleMenu = () => {
+        setMenuOpen((prevState) => !prevState); // Toggle menu open/close
     };
 
     return (
@@ -24,7 +29,10 @@ const Header = () => {
                 <img src={logo} alt="Logo" />
                 <h1 style={{ margin: 0 }}>{t('app_name')}</h1>
             </div>
-            <div className="buttons">
+            <div className="menu-icon" onClick={toggleMenu}>
+                {menuOpen ? <FaTimes /> : <FaBars />}
+            </div>
+            <div className={`buttons ${menuOpen ? 'open' : ''}`}>
                 <select
                     value={i18n.language}
                     onChange={(e) => changeLanguage(e.target.value)}
@@ -33,9 +41,10 @@ const Header = () => {
                     <option value="en">English</option>
                     <option value="tr">Türkçe</option>
                 </select>
-                <button onClick={() =>
-                    window.open(buyMeaCoffee, "_blank")
-                } className="create-button">
+                <button
+                    onClick={() => window.open(buyMeaCoffee, "_blank")}
+                    className="create-button"
+                >
                     <FaHeart className="heart-icon" />
                     {t('sponsor')}
                 </button>
