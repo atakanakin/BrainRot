@@ -2,12 +2,59 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import FileContentModal from "./FileContentModal";
 import '../styles/DashboardPage.css';
+import VideoModal from './VideoModal';
 
 const DashboardPage = () => {
     const { t } = useTranslation();
     const { user, loading, logout, checkAuthStatus } = useAuth();
     const [headerHeight, setHeaderHeight] = useState(0);
+    const [showModal, setShowModal] = useState(false);
+    const [showFileModal, setShowFileModal] = useState(false);
+    const [selectedFileName, setSelectedFileName] = useState("");
+    const [videoModal, setVideoModal] = useState({
+        isOpen: false,
+        filename: null,
+    });
+    
+      const handleShowVideo = (filename) => {
+        console.log("show video", filename);
+        setVideoModal({
+          isOpen: true,
+          filename: filename
+        });
+      };
+    
+      const handleCloseVideo = () => {
+        setVideoModal({
+          isOpen: false,
+          filename: null
+        });
+      };
+
+    useEffect(() => {
+        if (showFileModal) {
+            document.body.style.overflow = 'hidden';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [showFileModal]);
+
+    const UUID_LENGTH = 36;
+    const extractAndTruncateName = (filename, maxLength = 15) => {
+        const name = filename.slice(UUID_LENGTH + 1);
+        const nameWithExtension = name + ".txt";
+
+        return nameWithExtension.length > maxLength ? nameWithExtension.slice(0, maxLength) + "..." : nameWithExtension;
+    };
+
+    const openFileModal = (filename) => {
+        setSelectedFileName(filename);
+        setShowFileModal(true);
+    };
+
 
     useEffect(() => {
         const header = document.querySelector("header");
@@ -44,6 +91,10 @@ const DashboardPage = () => {
             </div>
         );
     }
+
+    const reversedHistory = [...(user?.history || [])].reverse();
+
+    const truncatedHistory = reversedHistory.slice(0, 3);
 
     return (
         <div className="dashboard-container"
@@ -94,13 +145,13 @@ const DashboardPage = () => {
                         <>
                             <h2>{t('dashboard.free', 'Free Subscription')}</h2>
                             <p>{t('dashboard.free_description', 'You have a free subscription')}</p>
-                            <button 
-                onClick={() => alert(t('dashboard.premium_features', 
-                    'Coming soon! Premium features will be available soon!'))}
-                className="premium-button"
-            >
-                {t('dashboard.unlock_premium', 'Unlock Premium')}
-            </button>
+                            <button
+                                onClick={() => alert(t('dashboard.premium_features',
+                                    'Coming soon! Premium features will be available soon!'))}
+                                className="premium-button"
+                            >
+                                {t('dashboard.unlock_premium', 'Unlock Premium')}
+                            </button>
                         </>
                     )}
                 </div>
@@ -123,6 +174,106 @@ const DashboardPage = () => {
                         </button>
                     </div>
                 </div>
+
+                <div className="dashboard-card history-card">
+                    <h2>{t("dashboard.history", "History")}</h2>
+                    <ul className="history-list">
+                        {user?.history.length === 0 ? (
+                            <li className="no-history-item">
+                                <span>{t("dashboard.no_history", "No history available")}</span>
+                            </li>
+                        ) : (
+                            truncatedHistory.map((item, index) => (
+                                <li key={index}
+                                    className="history-item"
+                                    onClick={() => openFileModal(item.filename)}
+                                >
+                                    <span className="history-filename">{extractAndTruncateName(item.filename)}</span>
+                                    <button
+                                        className="show-video-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleShowVideo(item.filename);
+                                        }}
+                                    >
+                                        {t("dashboard.show_video", "Show Video")}
+                                    </button>
+                                </li>
+                            ))
+                        )}
+                    </ul>
+                    {user?.history.length > 3 && (
+                        <button
+                            className='history-show-all-btn'
+                            onClick={() => setShowModal(true)}>
+                            {t("dashboard.show_all", "Show All")}
+                        </button>
+                    )}
+                </div>
+
+                <VideoModal
+                    isOpen={videoModal.isOpen}
+                    onClose={handleCloseVideo}
+                    filename={videoModal.filename}
+                />
+                {/* File Content Modal */}
+                <FileContentModal
+                    filename={selectedFileName}
+                    show={showFileModal}
+                    onClose={() => setShowFileModal(false)}
+                />
+
+
+                {/* Modal for full history */}
+                {showModal && (
+                    <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                        <div
+                            className="modal-content"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Close Button */}
+                            <button
+                                className="modal-close-btn"
+                                onClick={() => setShowModal(false)}
+                            >
+                                &times;
+                            </button>
+
+                            <h2 className="modal-title">{t("dashboard.history", "History")}</h2>
+                            <ul className="modal-history-list">
+                                {reversedHistory.map((item, index) => (
+                                    <li key={index}
+                                        className="modal-history-item"
+                                        onClick={() => openFileModal(item.filename)}
+                                    >
+                                        <span className="history-filename">
+                                            {extractAndTruncateName(item.filename, 40)}
+                                        </span>
+                                        <span className="history-details">
+                                            {new Date(item.date).toLocaleString("en-GB", {
+                                                day: "2-digit",
+                                                month: "2-digit",
+                                                year: "numeric",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                hourCycle: "h23",
+                                            })}
+                                            <button
+                                                className="show-video-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleShowVideo(item.filename);
+                                                }}
+                                            >
+                                                {t("dashboard.show_video", "Show Video")}
+                                            </button>
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

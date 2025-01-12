@@ -93,7 +93,9 @@ const OnboardingVideoSection = ({
         <video
           ref={videoRef}
           src={videoSrc}
+          autoPlay
           playsInline
+          muted={isMuted}
           onEnded={handleVideoEnd}
           className="video-element"
         />
