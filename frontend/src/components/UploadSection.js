@@ -23,6 +23,14 @@ const UploadSection = ({ onWorkflowComplete }) => {
   const [error, setError] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
 
+  const fileNameHelper = (filename) => {
+    const UUID_LENGTH = 36;
+    const name = filename.slice(UUID_LENGTH + 1);
+    const nameWithExtension = name;
+
+    return nameWithExtension;
+};
+
   const handleFileInputChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -208,33 +216,22 @@ const UploadSection = ({ onWorkflowComplete }) => {
 
       {textContent && (
         <div className="text-content-container">
-          {/* Create New Button */}
-          <button
-            className="create-new-button"
-            onClick={() => window.location.reload()}
-          >
-            {t("create_new")}
-          </button>
 
           {/* Text Content */}
-          <h3 className="text-content-title">{textFileName}</h3>
+          <h3 className="text-content-title">{fileNameHelper(textFileName)}</h3>
           <div className="text-content">
             <pre>{textContent}</pre>
           </div>
-          {/* Additional Information */}
-          <p className="info-text">
-            <strong>{t("note_text")}</strong>{" "}
-            <span
-              dangerouslySetInnerHTML={{
-                __html: t("processing_limit").replace(
-                  "<a>",
-                  `<a href="${buyMeaCoffee}" target="_blank" rel="noopener noreferrer" class="sponsor-link">`
-                )
-              }}
-            />
-          </p>
-
         </div>
+      )}
+
+      {textContent && (
+      <button
+        className="create-new-button"
+        onClick={() => window.location.reload()}
+      >
+        {t("create_new")}
+      </button>
       )}
     </div>
   );

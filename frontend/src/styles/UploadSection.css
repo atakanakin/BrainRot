@@ -85,8 +85,13 @@
   font-size: 0.9rem;
 }
 
+.text-content pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
 .create-new-button {
-  margin-bottom: 20px;
+  margin-top: 20px;
   padding: 10px 20px;
   background-color: #e5e5e5;
   color: #2a2a2a;
@@ -99,25 +104,6 @@
 
 .create-new-button:hover {
   background-color: #ccc;
-}
-
-/* Additional Information Text */
-.info-text {
-  margin-top: 20px;
-  font-size: 1rem;
-  color: #b7b7b7;
-  line-height: 1.6;
-}
-
-.info-text .sponsor-link {
-  color: red;
-  text-decoration: none;
-  font-weight: bold;
-  margin: 0 5px;
-}
-
-.info-text .sponsor-link:hover {
-  color: #ff4d4d;
 }
 
 .error-container {
