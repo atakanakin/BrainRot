@@ -152,3 +152,38 @@
 .retry-button:hover {
   background-color: red;
 }
+
+.upload-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.selected-filename {
+  color: #e5e5e5;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.create-btn {
+  padding: 10px 30px;
+  background-color: lightseagreen;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.create-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #808080;
+}
+
+.create-btn:not(.disabled):hover {
+  background-color: #17a2b8;
+}
