@@ -1,3 +1,7 @@
+Please visit https://thebrainrot.fun
+
+This project is maintained only by me. If you're enjoying it and would like to support my work, please consider [supporting me here](https://buymeacoffee.com/atakanakin). Your contributions are greatly appreciated! 🙏
+
 ## Setup Guide
 
 ### Prerequisites
