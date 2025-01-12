@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import FileContentModal from "./FileContentModal";
 import '../styles/DashboardPage.css';
+import VideoModal from './VideoModal';
 
 const DashboardPage = () => {
     const { t } = useTranslation();
@@ -12,6 +13,25 @@ const DashboardPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [showFileModal, setShowFileModal] = useState(false);
     const [selectedFileName, setSelectedFileName] = useState("");
+    const [videoModal, setVideoModal] = useState({
+        isOpen: false,
+        filename: null,
+    });
+    
+      const handleShowVideo = (filename) => {
+        console.log("show video", filename);
+        setVideoModal({
+          isOpen: true,
+          filename: filename
+        });
+      };
+    
+      const handleCloseVideo = () => {
+        setVideoModal({
+          isOpen: false,
+          filename: null
+        });
+      };
 
     useEffect(() => {
         if (showFileModal) {
@@ -169,16 +189,15 @@ const DashboardPage = () => {
                                     onClick={() => openFileModal(item.filename)}
                                 >
                                     <span className="history-filename">{extractAndTruncateName(item.filename)}</span>
-                                    <span className="history-date">
-                                        {new Date(item.date).toLocaleString("en-GB", {
-                                            day: "2-digit",
-                                            month: "2-digit",
-                                            year: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                            hourCycle: "h23",
-                                        })}
-                                    </span>
+                                    <button
+                                        className="show-video-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleShowVideo(item.filename);
+                                        }}
+                                    >
+                                        {t("dashboard.show_video", "Show Video")}
+                                    </button>
                                 </li>
                             ))
                         )}
@@ -192,12 +211,18 @@ const DashboardPage = () => {
                     )}
                 </div>
 
+                <VideoModal
+                    isOpen={videoModal.isOpen}
+                    onClose={handleCloseVideo}
+                    filename={videoModal.filename}
+                />
                 {/* File Content Modal */}
                 <FileContentModal
                     filename={selectedFileName}
                     show={showFileModal}
                     onClose={() => setShowFileModal(false)}
                 />
+
 
                 {/* Modal for full history */}
                 {showModal && (
@@ -234,14 +259,13 @@ const DashboardPage = () => {
                                                 hourCycle: "h23",
                                             })}
                                             <button
-                                                className="create-video-btn"
+                                                className="show-video-btn"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    alert(t('dashboard.create_video_request',
-                                                        'Coming soon! We will add the feature to create video soon!'));
+                                                    handleShowVideo(item.filename);
                                                 }}
                                             >
-                                                {t("dashboard.create_video", "Create Video")}
+                                                {t("dashboard.show_video", "Show Video")}
                                             </button>
                                         </span>
                                     </li>

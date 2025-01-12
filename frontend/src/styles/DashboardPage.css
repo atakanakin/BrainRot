@@ -292,8 +292,8 @@
   gap: 10px;
 }
 
-.create-video-btn {
-  background-color: #666;
+.show-video-btn {
+  background-color: #17a2b8;
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -303,8 +303,8 @@
   transition: background-color 0.3s ease;
 }
 
-.create-video-btn:hover {
-  background-color: #777;
+.show-video-btn:hover {
+  background-color: lightseagreen;
 }
 
 
