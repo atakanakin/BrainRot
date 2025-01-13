@@ -47,7 +47,7 @@
     cursor: pointer;
   }
   
-  @media (max-width: 768px) {
+  @media (max-width: 1000px) {
     .create-page {
       height: auto;
       padding: 80px 30px;
