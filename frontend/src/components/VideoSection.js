@@ -123,7 +123,6 @@ const VideoSection = forwardRef((props, ref) => {
       <div className="video-wrapper" onClick={handleVideoClick}>
       {isLoading && (
           <div className="video-placeholder">
-            <div className="loading-spinner"></div>
           </div>
         )}
         <video
