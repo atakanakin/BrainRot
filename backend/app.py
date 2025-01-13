@@ -14,10 +14,11 @@ from google.auth.transport.requests import Request
 from datetime import timedelta, datetime, UTC
 from functools import wraps
 
+PROD = True
 WORDS_PER_TOKEN = 100
 
-# TODO: remove this line in production
-# os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+if not PROD:
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 load_dotenv()
 
@@ -156,6 +157,10 @@ def login_required(f):
         access_invalid = False
         access_token = request.cookies.get("access_token")  # Read token from cookies
         refresh_token = request.cookies.get("refresh_token")
+
+        if not refresh_token:
+            return jsonify({"error": "No refresh token"}), 403
+
         if not access_token:
             access_invalid = True
         try:
@@ -170,10 +175,10 @@ def login_required(f):
                 raise jwt.InvalidTokenError("Invalid token type")
             request.user_id = payload["user_id"]
         except jwt.ExpiredSignatureError:
-            # Did the token expire?
-            if not refresh_token:
-                raise jwt.InvalidTokenError
             try:
+                # Did the token expire?
+                if not refresh_token:
+                    raise jwt.InvalidTokenError
                 payload = jwt.decode(
                     refresh_token, app.config["JWT_SECRET_KEY"], algorithms=["HS256"]
                 )
@@ -184,12 +189,11 @@ def login_required(f):
                 # Create a new access token
                 access_token, refresh_token = create_tokens(request.user_id)
                 response = f(*args, **kwargs)
-                # TODO: make secure=True in production
                 response.set_cookie(
                     "access_token",
                     access_token,
                     httponly=True,
-                    secure=True,
+                    secure=PROD,
                     samesite="Strict",
                     path="/",
                     max_age=3600,
@@ -198,7 +202,7 @@ def login_required(f):
                     "refresh_token",
                     refresh_token,
                     httponly=True,
-                    secure=True,
+                    secure=PROD,
                     samesite="Strict",
                     path="/",
                     max_age=2592000,
@@ -412,7 +416,7 @@ def oauth2callback():
             "access_token",
             access_token,
             httponly=True,
-            secure=True,  # Set True in production
+            secure=PROD,
             samesite="Strict",
             path="/",
             max_age=3600,  # 1 hour
@@ -422,7 +426,7 @@ def oauth2callback():
             "refresh_token",
             refresh_token,
             httponly=True,
-            secure=True,  # Set True in production
+            secure=PROD,
             samesite="Strict",
             path="/",
             max_age=2592000,  # 30 days
@@ -468,7 +472,7 @@ def logout():
             "",
             expires=0,
             httponly=True,
-            secure=False,  # Set True in production
+            secure=PROD,
             samesite="Strict",
             path="/",
         )
@@ -477,7 +481,7 @@ def logout():
             "",
             expires=0,
             httponly=True,
-            secure=False,  # Set True in production
+            secure=PROD,
             samesite="Strict",
             path="/",
         )
@@ -489,5 +493,5 @@ def logout():
 with app.app_context():
     db.create_all()
 
-# if __name__ == "__main__":
-#     app.run(debug=True, host="0.0.0.0", port=5000)
+if not PROD:
+    app.run(debug=True, host="0.0.0.0", port=5000)
