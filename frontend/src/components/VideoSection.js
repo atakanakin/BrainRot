@@ -24,6 +24,7 @@ const VideoSection = forwardRef((props, ref) => {
   const videoRef = useRef(null);
   const audioRef = useRef(null);
   const subtitleCues = useRef([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Subtitle handling
   useEffect(() => {
@@ -111,6 +112,7 @@ const VideoSection = forwardRef((props, ref) => {
   };
 
   const handleVideoChange = (key) => {
+    setIsLoading(true);
     setCurrentVideo(videos[key]);
     setIsPlaying(true);
     if (audioRef.current) audioRef.current.play();
@@ -119,9 +121,15 @@ const VideoSection = forwardRef((props, ref) => {
   return (
     <div className="video-section">
       <div className="video-wrapper" onClick={handleVideoClick}>
+      {isLoading && (
+          <div className="video-placeholder">
+            <div className="loading-spinner"></div>
+          </div>
+        )}
         <video
           ref={videoRef}
           src={currentVideo}
+          onLoadedData={() => setIsLoading(false)}
           onEnded={() => {
             setIsPlaying(true);
             videoRef.current.play();
