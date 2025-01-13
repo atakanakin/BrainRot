@@ -5,16 +5,11 @@ import "../styles/VideoSection.css";
 import { API_URL } from "../constants/Url";
 import { WebVTT } from "vtt.js";
 
-const videos = {
-  "Minecraft": "https://gitlab.com/atakanakin/shortvideos/-/raw/main/minecraft_short.mp4",
-  "Subway Surfers": "https://gitlab.com/atakanakin/shortvideos/-/raw/main/subway_surfers_short.mp4",
-  "GTA5": "https://gitlab.com/atakanakin/shortvideos/-/raw/main/gta_short.mp4",
-  "Satisfying": "https://gitlab.com/atakanakin/shortvideos/-/raw/main/satisfy_short.mp4",
-};
-
 const VideoSection = forwardRef((props, ref) => {
   const { t } = useTranslation();
-  const [currentVideo, setCurrentVideo] = useState(Object.values(videos)[0]);
+  const [videos, setVideos] = useState({});
+  const [currentCategory, setCurrentCategory] = useState(null);
+  const [currentVideo, setCurrentVideo] = useState(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [showIndicator, setShowIndicator] = useState(false);
   const [audioSrc, setAudioSrc] = useState(null);
@@ -24,6 +19,31 @@ const VideoSection = forwardRef((props, ref) => {
   const videoRef = useRef(null);
   const audioRef = useRef(null);
   const subtitleCues = useRef([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch videos.json dynamically
+    useEffect(() => {
+      const fetchVideos = async () => {
+        try {
+          const response = await fetch("/videos.json");
+          const data = await response.json();
+          setVideos(data);
+          const firstCategory = Object.keys(data)[0];
+          setCurrentCategory(firstCategory);
+          setCurrentVideo(data[firstCategory][0]);
+        } catch (error) {
+          console.error("Error fetching videos.json:", error);
+        }
+      };
+  
+      fetchVideos();
+    }, []);
+
+  const getRandomVideo = (category) => {
+    const videoList = videos[category];
+    const randomIndex = Math.floor(Math.random() * videoList.length);
+    return videoList[randomIndex];
+  };
 
   // Subtitle handling
   useEffect(() => {
@@ -52,25 +72,25 @@ const VideoSection = forwardRef((props, ref) => {
   // Audio time update handling
   useEffect(() => {
     const handleTimeUpdate = () => {
-      if (audioRef.current) {
-        const currentTime = audioRef.current.currentTime;
-        const currentCue = subtitleCues.current.find(
-          cue => cue.startTime <= currentTime && cue.endTime >= currentTime
-        );
-        setSubtitleText(currentCue ? currentCue.text : "");
-      }
+      const currentTime = audioElement.currentTime;
+      const currentCue = subtitleCues.current.find(
+        (cue) => cue.startTime <= currentTime && cue.endTime >= currentTime
+      );
+      setSubtitleText(currentCue ? currentCue.text : "");
     };
 
-    if (audioRef.current) {
-      audioRef.current.addEventListener("timeupdate", handleTimeUpdate);
+    const audioElement = audioRef.current; // Capture the current value of audioRef.current
+
+    if (audioElement) {
+      audioElement.addEventListener("timeupdate", handleTimeUpdate);
     }
 
     return () => {
-      if (audioRef.current) {
-        audioRef.current.removeEventListener("timeupdate", handleTimeUpdate);
+      if (audioElement) {
+        audioElement.removeEventListener("timeupdate", handleTimeUpdate);
       }
     };
-  }, [audioSrc]);
+  }, [audioSrc]); // Keep the dependency on audioSrc
 
   useImperativeHandle(ref, () => ({
     handleInternalWorkflowComplete: async (audioFile, subtitleFile) => {
@@ -110,8 +130,11 @@ const VideoSection = forwardRef((props, ref) => {
     setTimeout(() => setShowIndicator(false), 800);
   };
 
-  const handleVideoChange = (key) => {
-    setCurrentVideo(videos[key]);
+  const handleVideoChange = (category) => {
+    setIsLoading(true);
+    const randomVideo = getRandomVideo(category);
+    setCurrentCategory(category);
+    setCurrentVideo(randomVideo);
     setIsPlaying(true);
     if (audioRef.current) audioRef.current.play();
   };
@@ -119,9 +142,14 @@ const VideoSection = forwardRef((props, ref) => {
   return (
     <div className="video-section">
       <div className="video-wrapper" onClick={handleVideoClick}>
+      {isLoading && (
+          <div className="video-placeholder">
+          </div>
+        )}
         <video
           ref={videoRef}
           src={currentVideo}
+          onLoadedData={() => setIsLoading(false)}
           onEnded={() => {
             setIsPlaying(true);
             videoRef.current.play();
@@ -151,13 +179,13 @@ const VideoSection = forwardRef((props, ref) => {
         <p className="error-message">{t("subtitle_load_error")}</p>
       )}
       <div className="slider">
-        {Object.keys(videos).map((key, index) => (
+        {Object.keys(videos).map((category, index) => (
           <button
             key={index}
-            className={`slider-button ${currentVideo === videos[key] ? "active" : ""}`}
-            onClick={() => handleVideoChange(key)}
+            className={`slider-button ${currentCategory === category ? "active" : ""}`}
+            onClick={() => handleVideoChange(category)}
           >
-            {key}
+            {category}
           </button>
         ))}
       </div>

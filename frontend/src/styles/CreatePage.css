@@ -17,8 +17,12 @@
     height: 100%;
     gap: 10px;
   }
-  .upload-section {
+  .split-container > div:first-child {
     flex: 1;
+    max-width: 30%;
+}
+  .upload-section {
+    flex: 2;
     background-color: #202020;
     display: flex;
     flex-direction: column;
@@ -47,7 +51,7 @@
     cursor: pointer;
   }
   
-  @media (max-width: 768px) {
+  @media (max-width: 1000px) {
     .create-page {
       height: auto;
       padding: 80px 30px;
@@ -59,6 +63,11 @@
       height: auto;
       gap: 20px;
     }
+
+    .split-container > div:first-child {
+      max-width: 90%;
+      width: 90%;
+  }
 
     .upload-section {
       width: 90%;
