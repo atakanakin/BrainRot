@@ -7,14 +7,10 @@ const VideoModal = ({ isOpen, onClose,filename }) => {
   const videoSectionRef = useRef(null);
   useEffect(() => {
     if (isOpen && filename && videoSectionRef.current) {
-      const timeout = setTimeout(() => {
-        videoSectionRef.current.handleInternalWorkflowComplete(
-          filename + ".mp3",
-          filename + ".vtt"
-        );
-      }, 1000); // 1 second delay
-
-      return () => clearTimeout(timeout);
+      videoSectionRef.current.handleInternalWorkflowComplete(
+        filename + ".mp3",
+        filename + ".vtt"
+      );
     }
   }, [isOpen, filename]);
   
