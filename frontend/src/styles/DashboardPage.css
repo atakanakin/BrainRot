@@ -308,13 +308,84 @@
 }
 
 
-
 @media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr; /* Single-column layout */
+    justify-content: center; /* Center the items */
+    align-items: center;
+    gap: 1rem; /* Adjust spacing between cards */
+  }
+
+  .dashboard-card {
+    width: 90%; /* Set the card width to 90% */
+    margin: 0 auto; /* Center the card */
+    box-sizing: border-box; /* Include padding and border in width */
+  }
+
   .profile-card {
-    grid-column: span 1;
+    grid-column: span 1; /* Ensure profile card spans full width */
+    width: 90%; /* Match other cards */
+    margin: 0 auto; /* Center the profile card */
+  }
+}
+
+/* Fix dashboard layout for small screens */
+@media (max-width: 365px) {
+  .profile-details {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center-align the text and avatar */
+    justify-content: center;
+  }
+
+  .profile-details p {
+    word-break: break-word; /* Break long words */
+    white-space: normal; /* Allow text to wrap */
+    text-align: center; /* Center-align the text */
+    max-width: 100%; /* Ensure the text does not exceed container width */
+    line-height: 1.2; /* Adjust line height for readability */
+  }
+
+  .profile-avatar {
+    margin-bottom: 10px; /* Add space between avatar and details */
+  }
+  
+  .dashboard-container {
+    padding: 1rem; /* Adjust padding for smaller screens */
   }
 
   .dashboard-grid {
-    grid-template-columns: 1fr;
+    display: flex; /* Change to flexbox for better control */
+    flex-direction: column; /* Stack the cards vertically */
+    align-items: center; /* Center cards horizontally */
+    gap: 1rem; /* Adjust gap between cards */
+  }
+
+  .dashboard-card {
+    width: 100%; /* Make the card take up full width */
+    max-width: 90%; /* Add some margin on the sides */
+    box-sizing: border-box; /* Include padding/border in width */
+    margin: 0 auto; /* Center the card horizontally */
+  }
+
+  .profile-card {
+    width: 100%; /* Match width of other cards */
+    max-width: 90%; /* Add margin */
+    margin: 0 auto;
+  }
+
+  .profile-info {
+    flex-direction: column; /* Stack profile picture and details */
+    text-align: center; /* Center-align the content */
+    gap: 0.5rem; /* Adjust spacing between elements */
+  }
+
+  .profile-avatar {
+    width: 60px; /* Adjust size for smaller screens */
+    height: 60px;
+  }
+
+  .token-number {
+    font-size: 1.8rem; /* Reduce font size */
   }
 }
