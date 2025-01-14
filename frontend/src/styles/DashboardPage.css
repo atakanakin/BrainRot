@@ -1,174 +1,391 @@
 /* DashboardPage.css */
 .dashboard-container {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
-  .dashboard-header {
-    margin-bottom: 2rem;
-  }
-  
-  .dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-  }
-  
-  .dashboard-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    max-width: 100%;
-  }
-  
-  .profile-card {
-    grid-column: span 2;
-    text-align: left;
-    display: flex;           /* Add flex */
-    justify-content: center; /* Center horizontally */
-    align-items: center;     /* Center vertically */
-    min-height: 200px;      /* Ensure minimum height for vertical centering */
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.dashboard-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 100%;
+}
+
+.profile-card {
+  grid-column: span 2;
+  text-align: left;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
 }
 
 .profile-info {
-    display: flex;
-    align-items: center;     /* Center items vertically */
-    justify-content: center; /* Center items horizontally */
-    gap: 1.5rem;
-    margin-bottom: 0;        /* Remove bottom margin */
-    width: 100%;            /* Take full width */
-    max-width: 500px;       /* Limit maximum width */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 0;
+  width: 100%;
+  max-width: 500px;
 }
 
 .profile-details {
-    display: flex;          /* Add flex */
-    flex-direction: column; /* Stack children vertically */
-    justify-content: center; /* Center content vertically */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
+
 .profile-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    object-fit: cover;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .profile-details h3,
 .profile-details p {
-    margin: 0;             /* Remove default margins */
-    text-align: left;      /* Keep text left-aligned */
+  margin: 0;
+  text-align: left;
 }
 
 .profile-details p {
-    margin-top: 0.5rem;    /* Add space between name and email */
+  margin-top: 0.5rem;
 }
-  
-  .token-info {
-    text-align: center;
-    padding: 1rem;
-  }
-  
-  .token-number {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #4285f4;
-    display: block;
-  }
-  
-  .token-label {
-    color: #666;
-  }
 
-  /* Subscription card styles */
+.token-info {
+  text-align: center;
+  padding: 1rem;
+}
+
+.token-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #4285f4;
+  display: block;
+}
+
+.token-label {
+  color: #666;
+}
+
 .subscription-card {
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .subscription-card h2 {
-    color: #333;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-  
-  .subscription-card p {
-    color: #666;
-    margin-bottom: 1rem;
-    line-height: 1.5;
-  }
-  
-  /* Premium specific styles */
-  .subscription-card:has(h2:contains('Premium')) {
-    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
-    border: 2px solid #4285f4;
-  }
-  
-  .subscription-card:has(h2:contains('Premium')) h2 {
-    color: #4285f4;
-  }
-  
-  /* Free specific styles */
-  .subscription-card:has(h2:contains('Free')) {
-    background: #fff;
-    border: 1px solid #e0e0e0;
-  }
+  position: relative;
+  overflow: hidden;
+}
 
-  /* Add to DashboardPage.css */
+.subscription-card h2 {
+  color: #333;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.subscription-card p {
+  color: #666;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+/* Premium specific styles */
+.subscription-card:has(h2:contains('Premium')) {
+  background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+  border: 2px solid #4285f4;
+}
+
+.subscription-card:has(h2:contains('Premium')) h2 {
+  color: #4285f4;
+}
+
+.subscription-card:has(h2:contains('Free')) {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+}
+
 .premium-button {
-    background: #4285f4;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin-top: 1rem;
+  background: #4285f4;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
 }
 
 .premium-button:hover {
-    background: #3367d6;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: #3367d6;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-  
-  .action-buttons {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-    align-items: center;     /* Center items vertically */
-    justify-content: center;
-  }
-  
-  .action-buttons button {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    background: #4285f4;
-    color: white;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  
-  .action-buttons button:hover {
-    background: #3367d6;
-  }
-  .logout-button {
-    background-color: #dc3545 !important;
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-buttons button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  background: #4285f4;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.action-buttons button:hover {
+  background: #3367d6;
+}
+
+.logout-button {
+  background-color: #dc3545 !important;
 }
 
 .logout-button:hover {
-    background-color: #c82333 !important;
+  background-color: #c82333 !important;
 }
-  
-  @media (max-width: 768px) {
-    .profile-card {
-      grid-column: span 1;
-    }
-    
-    .dashboard-grid {
-      grid-template-columns: 1fr;
-    }
+
+.history-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 10px;
+}
+
+.history-item:hover {
+  background-color: #eee;
+}
+
+.history-filename {
+  font-weight: bold;
+  text-align: left;
+}
+
+.history-date {
+  font-size: 0.9em;
+  color: #666;
+  text-align: right;
+}
+
+.history-show-all-btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 0.95em;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #666;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.history-show-all-btn:hover {
+  background-color: #777;
+}
+
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 800px;
+  height: 80vh;
+  padding: 20px;
+  position: relative;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #888;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.modal-close-btn:hover {
+  color: #000;
+}
+
+.modal-title {
+  margin: 0;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.modal-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.modal-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 10px;
+}
+
+.modal-history-item:hover {
+  background-color: #eee;
+}
+
+.history-filename {
+  font-weight: bold;
+  flex-grow: 1;
+  text-align: left;
+  margin-right: 20px;
+}
+
+.history-details {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.show-video-btn {
+  background-color: #17a2b8;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.show-video-btn:hover {
+  background-color: lightseagreen;
+}
+
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr; /* Single-column layout */
+    justify-content: center; /* Center the items */
+    align-items: center;
+    gap: 1rem; /* Adjust spacing between cards */
   }
+
+  .dashboard-card {
+    width: 90%; /* Set the card width to 90% */
+    margin: 0 auto; /* Center the card */
+    box-sizing: border-box; /* Include padding and border in width */
+  }
+
+  .profile-card {
+    grid-column: span 1; /* Ensure profile card spans full width */
+    width: 90%; /* Match other cards */
+    margin: 0 auto; /* Center the profile card */
+  }
+}
+
+/* Fix dashboard layout for small screens */
+@media (max-width: 365px) {
+  .profile-details {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center-align the text and avatar */
+    justify-content: center;
+  }
+
+  .profile-details p {
+    word-break: break-word; /* Break long words */
+    white-space: normal; /* Allow text to wrap */
+    text-align: center; /* Center-align the text */
+    max-width: 100%; /* Ensure the text does not exceed container width */
+    line-height: 1.2; /* Adjust line height for readability */
+  }
+
+  .profile-avatar {
+    margin-bottom: 10px; /* Add space between avatar and details */
+  }
+  
+  .dashboard-container {
+    padding: 1rem; /* Adjust padding for smaller screens */
+  }
+
+  .dashboard-grid {
+    display: flex; /* Change to flexbox for better control */
+    flex-direction: column; /* Stack the cards vertically */
+    align-items: center; /* Center cards horizontally */
+    gap: 1rem; /* Adjust gap between cards */
+  }
+
+  .dashboard-card {
+    width: 100%; /* Make the card take up full width */
+    max-width: 90%; /* Add some margin on the sides */
+    box-sizing: border-box; /* Include padding/border in width */
+    margin: 0 auto; /* Center the card horizontally */
+  }
+
+  .profile-card {
+    width: 100%; /* Match width of other cards */
+    max-width: 90%; /* Add margin */
+    margin: 0 auto;
+  }
+
+  .profile-info {
+    flex-direction: column; /* Stack profile picture and details */
+    text-align: center; /* Center-align the content */
+    gap: 0.5rem; /* Adjust spacing between elements */
+  }
+
+  .profile-avatar {
+    width: 60px; /* Adjust size for smaller screens */
+    height: 60px;
+  }
+
+  .token-number {
+    font-size: 1.8rem; /* Reduce font size */
+  }
+}

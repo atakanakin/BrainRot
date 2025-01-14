@@ -14,19 +14,20 @@ from google.auth.transport.requests import Request
 from datetime import timedelta, datetime, UTC
 from functools import wraps
 
+PROD = True
 WORDS_PER_TOKEN = 100
 
-# TODO: remove this line in production
-# os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+if not PROD:
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 load_dotenv()
 
 app = Flask(__name__)
 
 # config
-app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.secret_key = os.getenv("SECRET_KEY", "default_secret_key")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -79,13 +80,15 @@ def process_file(self, filename, user_id):
             # Stage 1: Extract text
             self.update_state(state="EXTRACTING_TEXT")
             input_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            text_file, word_count = extract_text(input_path, app.config["EXTRACTED_FOLDER"])
+            text_file, word_count = extract_text(
+                input_path, app.config["EXTRACTED_FOLDER"]
+            )
 
             # Check if the user has enough tokens
             user: User = get_user_from_id(user_id)
             token_cost = round(word_count / WORDS_PER_TOKEN)
             if not user.use_create_token(token_cost):
-               raise Exception(f"Insufficient tokens: {token_cost} required")
+                raise Exception(f"Insufficient tokens: {token_cost} required")
 
             # Stage 2: Convert text to speech
             self.update_state(state="GENERATING_AUDIO")
@@ -106,81 +109,113 @@ def process_file(self, filename, user_id):
             }
 
         except Exception as e:
-            return {
-                "status": "FAILED",
-                "error": str(e)
-            }
-    
+            return {"status": "FAILED", "error": str(e)}
+
+
 def get_user_from_id(user_id):
     """Get user object from secure_id"""
     return User.query.filter_by(secure_id=user_id).first()
-    
+
+
 def create_tokens(user_id):
     """Create access and refresh tokens with different claims"""
     now = datetime.now(UTC)
-    
+
     # Access token - contains more info but shorter lifetime
-    access_token = jwt.encode({
-        'user_id': user_id,
-        'type': 'access',
-        'jti': str(uuid.uuid4()),  # unique token id
-        'iat': now.timestamp(),    # issued at
-        'exp': (now + app.config['JWT_ACCESS_TOKEN_EXPIRES']).timestamp(),
-        'scope': 'api:access'      # token scope
-    }, app.config['JWT_SECRET_KEY'])
-    
+    access_token = jwt.encode(
+        {
+            "user_id": user_id,
+            "type": "access",
+            "jti": str(uuid.uuid4()),  # unique token id
+            "iat": now.timestamp(),  # issued at
+            "exp": (now + app.config["JWT_ACCESS_TOKEN_EXPIRES"]).timestamp(),
+            "scope": "api:access",  # token scope
+        },
+        app.config["JWT_SECRET_KEY"],
+    )
+
     # Refresh token - minimal info but longer lifetime
-    refresh_token = jwt.encode({
-        'user_id': user_id,
-        'type': 'refresh',
-        'jti': str(uuid.uuid4()),
-        'iat': now.timestamp(),
-        'exp': (now + app.config['JWT_REFRESH_TOKEN_EXPIRES']).timestamp(),
-        'scope': 'api:refresh'
-    }, app.config['JWT_SECRET_KEY'])
-    
+    refresh_token = jwt.encode(
+        {
+            "user_id": user_id,
+            "type": "refresh",
+            "jti": str(uuid.uuid4()),
+            "iat": now.timestamp(),
+            "exp": (now + app.config["JWT_REFRESH_TOKEN_EXPIRES"]).timestamp(),
+            "scope": "api:refresh",
+        },
+        app.config["JWT_SECRET_KEY"],
+    )
+
     return access_token, refresh_token
+
 
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         # Get the token from cookies
-        access_token = request.cookies.get('access_token')  # Read token from cookies
-        refresh_token = request.cookies.get('refresh_token')
+        access_invalid = False
+        access_token = request.cookies.get("access_token")  # Read token from cookies
+        refresh_token = request.cookies.get("refresh_token")
+
+        if not refresh_token:
+            return jsonify({"error": "No refresh token"}), 403
+
         if not access_token:
-            return jsonify({'error': 'No token provided'}), 401
+            access_invalid = True
         try:
+            if access_invalid:
+                raise jwt.ExpiredSignatureError
             # Decode the JWT token
-            payload = jwt.decode(access_token, app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
+            payload = jwt.decode(
+                access_token, app.config["JWT_SECRET_KEY"], algorithms=["HS256"]
+            )
             # Verify token type
-            if payload.get('type') != 'access':
-                raise jwt.InvalidTokenError('Invalid token type')
-            request.user_id = payload['user_id']
+            if payload.get("type") != "access":
+                raise jwt.InvalidTokenError("Invalid token type")
+            request.user_id = payload["user_id"]
         except jwt.ExpiredSignatureError:
-            # Did the token expire?
-            if not refresh_token:
-                raise jwt.InvalidTokenError
             try:
-                payload = jwt.decode(refresh_token, app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
+                # Did the token expire?
+                if not refresh_token:
+                    raise jwt.InvalidTokenError
+                payload = jwt.decode(
+                    refresh_token, app.config["JWT_SECRET_KEY"], algorithms=["HS256"]
+                )
                 # Verify refresh token type
-                if payload.get('type') != 'refresh':
-                    raise jwt.InvalidTokenError('Invalid refresh token type')
-                request.user_id = payload['user_id']
+                if payload.get("type") != "refresh":
+                    raise jwt.InvalidTokenError("Invalid refresh token type")
+                request.user_id = payload["user_id"]
                 # Create a new access token
                 access_token, refresh_token = create_tokens(request.user_id)
                 response = f(*args, **kwargs)
-                # TODO: make secure=True in production
-                response.set_cookie('access_token', access_token, httponly=True, secure=True, samesite='Strict', path='/', max_age=3600)
-                response.set_cookie('refresh_token', refresh_token, httponly=True, secure=True, samesite='Strict', path='/', max_age=2592000)
+                response.set_cookie(
+                    "access_token",
+                    access_token,
+                    httponly=True,
+                    secure=PROD,
+                    samesite="Strict",
+                    path="/",
+                    max_age=3600,
+                )
+                response.set_cookie(
+                    "refresh_token",
+                    refresh_token,
+                    httponly=True,
+                    secure=PROD,
+                    samesite="Strict",
+                    path="/",
+                    max_age=2592000,
+                )
                 return response
             except jwt.InvalidTokenError:
-                return jsonify({'error': 'Invalid refresh token'}), 401
+                return jsonify({"error": "Invalid refresh token"}), 401
         except jwt.InvalidTokenError:
-            return jsonify({'error': 'Invalid token'}), 401
+            return jsonify({"error": "Invalid token"}), 401
         # If the token is valid, proceed with the request
         return f(*args, **kwargs)
-    return decorated
 
+    return decorated
 
 
 @app.after_request
@@ -313,24 +348,26 @@ def google_login():
                     "redirect_uris": [REDIRECT_URI],
                 }
             },
-            scopes=["openid", "https://www.googleapis.com/auth/userinfo.email", 
-                   "https://www.googleapis.com/auth/userinfo.profile"]
+            scopes=[
+                "openid",
+                "https://www.googleapis.com/auth/userinfo.email",
+                "https://www.googleapis.com/auth/userinfo.profile",
+            ],
         )
         flow.redirect_uri = REDIRECT_URI
         authorization_url, state = flow.authorization_url(
-            access_type='offline',
-            include_granted_scopes='true',
-            prompt='consent'
+            access_type="offline", include_granted_scopes="true", prompt="consent"
         )
         session["state"] = state
         return redirect(authorization_url)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route("/oauth2callback")
 def oauth2callback():
     try:
-        if request.args.get('state') != session.get('state'):
+        if request.args.get("state") != session.get("state"):
             return jsonify({"error": "Invalid state parameter"}), 401
 
         flow = Flow.from_client_config(
@@ -343,8 +380,11 @@ def oauth2callback():
                     "redirect_uris": [REDIRECT_URI],
                 }
             },
-            scopes=["openid", "https://www.googleapis.com/auth/userinfo.email", 
-                   "https://www.googleapis.com/auth/userinfo.profile"]
+            scopes=[
+                "openid",
+                "https://www.googleapis.com/auth/userinfo.email",
+                "https://www.googleapis.com/auth/userinfo.profile",
+            ],
         )
         flow.redirect_uri = REDIRECT_URI
         flow.fetch_token(authorization_response=request.url)
@@ -359,7 +399,7 @@ def oauth2callback():
                 google_id=idinfo["sub"],
                 name=idinfo["name"],
                 email=idinfo["email"],
-                token=credentials.token
+                token=credentials.token,
             )
             db.session.add(user)
         else:
@@ -367,36 +407,37 @@ def oauth2callback():
             user.update_last_login()
 
         db.session.commit()
-        
+
         access_token, refresh_token = create_tokens(user.secure_id)
-        
-        response = redirect(FRONTEND_URL+"/#/create")
+
+        response = redirect(FRONTEND_URL + "/#/create")
         # TODO: make secure=True in production
         response.set_cookie(
-            "access_token", 
+            "access_token",
             access_token,
             httponly=True,
-            secure=True,  # Set True in production
-            samesite='Strict',
-            path='/',
-            max_age=3600  # 1 hour
+            secure=PROD,
+            samesite="Strict",
+            path="/",
+            max_age=3600,  # 1 hour
         )
         # TODO: make secure=True in production
         response.set_cookie(
             "refresh_token",
             refresh_token,
             httponly=True,
-            secure=True,  # Set True in production
-            samesite='Strict',
-            path='/',
-            max_age=2592000  # 30 days
+            secure=PROD,
+            samesite="Strict",
+            path="/",
+            max_age=2592000,  # 30 days
         )
         return response
 
     except Exception as e:
         db.session.rollback()
         return redirect(FRONTEND_URL + "/login?error=login_failed")
-    
+
+
 @app.route("/user/status", methods=["GET"])
 @login_required
 def user_status():
@@ -404,13 +445,16 @@ def user_status():
         user = get_user_from_id(request.user_id)
         if not user:
             return jsonify({"error": "User not found"}), 404
-        return jsonify({
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "is_premium": user.is_premium,
-            "remaining_tokens": user.remaining_create_tokens
-        })
+        return jsonify(
+            {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "is_premium": user.is_premium,
+                "remaining_tokens": user.remaining_create_tokens,
+                "history": user.get_files(),
+            }
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -423,19 +467,23 @@ def logout():
         user.update_last_login()
         response = jsonify({"message": "Logged out successfully"})
         # Clear cookies by setting them to expire immediately
-        response.set_cookie('access_token', '', 
-            expires=0, 
-            httponly=True, 
-            secure=False,  # Set True in production
-            samesite='Strict',
-            path='/'
-        )
-        response.set_cookie('refresh_token', '',
+        response.set_cookie(
+            "access_token",
+            "",
             expires=0,
-            httponly=True, 
-            secure=False,  # Set True in production
-            samesite='Strict',
-            path='/'
+            httponly=True,
+            secure=PROD,
+            samesite="Strict",
+            path="/",
+        )
+        response.set_cookie(
+            "refresh_token",
+            "",
+            expires=0,
+            httponly=True,
+            secure=PROD,
+            samesite="Strict",
+            path="/",
         )
         return response
     except Exception as e:
@@ -445,5 +493,5 @@ def logout():
 with app.app_context():
     db.create_all()
 
-# if __name__ == "__main__":
-#     app.run(debug=True, host="0.0.0.0", port=5000)
+if not PROD:
+    app.run(debug=True, host="0.0.0.0", port=5000)

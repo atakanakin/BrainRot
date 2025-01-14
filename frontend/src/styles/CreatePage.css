@@ -17,24 +17,12 @@
     height: 100%;
     gap: 10px;
   }
-  
-  .video-section{
+  .split-container > div:first-child {
     flex: 1;
-    background-color: #202020;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.75);
-    margin: 0 10px;
-    padding: 20px;
-    min-width: min-content;
-    height: 80%;
     max-width: 30%;
-  }
+}
   .upload-section {
-    flex: 1;
+    flex: 2;
     background-color: #202020;
     display: flex;
     flex-direction: column;
@@ -46,65 +34,6 @@
     padding: 20px;
     height: 80%;
     max-width: 70%;
-  }
-  
-  .video-wrapper {
-    position: relative;
-    height: 90%;
-    cursor: pointer;
-    background: black;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  
-  .video-element {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .play-pause-indicator {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 3rem;
-    color: rgba(0, 0, 0, 0.8);
-    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
-    pointer-events: none;
-    animation: fade-out 1s ease forwards;
-  }
-  
-  @keyframes fade-out {
-    0% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-    }
-  }
-  
-  .slider {
-    display: flex;
-    justify-content: center;
-    margin-top: 15px;
-    gap: 10px;
-  }
-  
-  .slider-button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    background-color: #2A2A2A;
-    color: #E5E5E5;
-    font-weight: 600;
-  }
-  
-  .slider-button.active {
-    background-color: #E5E5E5;
-    color: #2A2A2A;
-    border: 2px solid #e9e9e9;
   }
   
   .upload-section h2,
@@ -121,24 +50,8 @@
     border-radius: 5px;
     cursor: pointer;
   }
-
-  .subtitle {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100%;
-    text-align: center;
-    font-size: 2rem;
-    font-weight: 900;
-    color: white;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-    z-index: 10;
-    font-family: 'Montserrat', sans-serif;
-    letter-spacing: -1.0px; /* Decrease letter spacing */
-  }
   
-  @media (max-width: 768px) {
+  @media (max-width: 1000px) {
     .create-page {
       height: auto;
       padding: 80px 30px;
@@ -150,10 +63,11 @@
       height: auto;
       gap: 20px;
     }
-  
-    .video-section{
-      width: 95%;
-    }
+
+    .split-container > div:first-child {
+      max-width: 90%;
+      width: 90%;
+  }
 
     .upload-section {
       width: 90%;
