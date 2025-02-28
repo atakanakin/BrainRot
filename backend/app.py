@@ -13,6 +13,7 @@ from google.oauth2 import id_token
 from google.auth.transport.requests import Request
 from datetime import timedelta, datetime, UTC
 from functools import wraps
+from log_service import unexpected_error, welcome_new_user, low_token_alert
 
 PROD = True
 WORDS_PER_TOKEN = 100
@@ -34,6 +35,10 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["UPLOAD_FOLDER"] = "./uploads"
 app.config["EXTRACTED_FOLDER"] = "./extracted"
 app.config["CONVERTED_FOLDER"] = "./converted"
+app.config["LOG_FOLDER"] = "./logs"
+app.config["TELEGRAM_BOT_TOKEN"] = os.getenv("TELEGRAM_BOT_TOKEN")
+app.config["TELEGRAM_CHAT_ID"] = os.getenv("TELEGRAM_CHAT_ID")
+app.config["SENDGRID_API_KEY"] = os.getenv("SENDGRID_API_KEY")
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024  # 20 MB limit
 
 # Frontend and Celery configurations
@@ -57,6 +62,7 @@ CORS(
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 os.makedirs(app.config["EXTRACTED_FOLDER"], exist_ok=True)
 os.makedirs(app.config["CONVERTED_FOLDER"], exist_ok=True)
+os.makedirs(app.config["LOG_FOLDER"], exist_ok=True)
 
 celery = Celery(app.name, broker=BROKER_URL, backend=RESULT_BACKEND)
 celery.conf.update(app.config)
@@ -88,6 +94,13 @@ def process_file(self, filename, user_id):
             user: User = get_user_from_id(user_id)
             token_cost = round(word_count / WORDS_PER_TOKEN)
             if not user.use_create_token(token_cost):
+                low_token_alert(
+                    sendgrid_api_key=app.config["SENDGRID_API_KEY"],
+                    bot_token=app.config["TELEGRAM_BOT_TOKEN"],
+                    chat_id=app.config["TELEGRAM_CHAT_ID"],
+                    user_mail=user.email,
+                    user_name=user.name,
+                )
                 raise Exception(f"Insufficient tokens: {token_cost} required")
 
             # Stage 2: Convert text to speech
@@ -210,6 +223,14 @@ def login_required(f):
                 return response
             except jwt.InvalidTokenError:
                 return jsonify({"error": "Invalid refresh token"}), 401
+            except Exception as tuple_err:
+                unexpected_error(
+                    bot_token=app.config["TELEGRAM_BOT_TOKEN"],
+                    chat_id=app.config["TELEGRAM_CHAT_ID"],
+                    error_file=os.path.join(app.config["LOG_FOLDER"], "errors.log"),
+                    raw_error=f"login_required: error={tuple_err}",
+                )
+                return jsonify({"error": "Something went wrong!"}), 500
         except jwt.InvalidTokenError:
             return jsonify({"error": "Invalid token"}), 401
         # If the token is valid, proceed with the request
@@ -361,6 +382,12 @@ def google_login():
         session["state"] = state
         return redirect(authorization_url)
     except Exception as e:
+        unexpected_error(
+            bot_token=app.config["TELEGRAM_BOT_TOKEN"],
+            chat_id=app.config["TELEGRAM_CHAT_ID"],
+            error_file=os.path.join(app.config["LOG_FOLDER"], "errors.log"),
+            raw_error=f"google_login: error={e}",
+        )
         return jsonify({"error": str(e)}), 500
 
 
@@ -402,6 +429,13 @@ def oauth2callback():
                 token=credentials.token,
             )
             db.session.add(user)
+            welcome_new_user(
+                sendgrid_api_key=app.config["SENDGRID_API_KEY"],
+                bot_token=app.config["TELEGRAM_BOT_TOKEN"],
+                chat_id=app.config["TELEGRAM_CHAT_ID"],
+                user_mail=idinfo["email"],
+                user_name=idinfo["name"],
+            )
         else:
             user.update_token(credentials.token)
             user.update_last_login()
@@ -433,7 +467,21 @@ def oauth2callback():
         )
         return response
 
-    except Exception as e:
+    except Exception as err:
+        log_username = "Unknown"
+        log_email = "Unknown"
+        try:
+            log_username = idinfo["name"]
+            log_email = idinfo["email"]
+        except Exception as e:
+            print(f"Error in oauth2callback: {e}")
+            pass
+        unexpected_error(
+            bot_token=app.config["TELEGRAM_BOT_TOKEN"],
+            chat_id=app.config["TELEGRAM_CHAT_ID"],
+            error_file=os.path.join(app.config["LOG_FOLDER"], "errors.log"),
+            raw_error=f"oauth2callback: username={log_username}, email={log_email}, error={err}",
+        )
         db.session.rollback()
         return redirect(FRONTEND_URL + "/login?error=login_failed")
 
