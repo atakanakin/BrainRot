@@ -26,6 +26,19 @@ const Footer = () => {
                     <FaLinkedin className="linkedin" />
                 </a>
             </div>
+            <div className="scout-forge-badge">
+                <a
+                    href="https://scoutforge.net/reviews/brainrot/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Trusted and reviewed by Scout Forge"
+                >
+                    <img
+                        src="https://scoutforge.net/wp-content/themes/wp-theme/assets/img/badges/badge-dark.webp"
+                        alt="Trusted and Reviewed by Scout Forge"
+                    />
+                </a>
+            </div>
         </footer>
     );
 };
