@@ -1,14 +1,26 @@
 {
-    "Minecraft": [
-      "https://gitlab.com/atakanakin/shortvideos/-/raw/main/minecraft_short.mp4"
-    ],
-    "Subway Surfers": [
-      "https://gitlab.com/atakanakin/shortvideos/-/raw/main/subway_surfers_short.mp4"
-    ],
-    "GTA5": [
-      "https://gitlab.com/atakanakin/shortvideos/-/raw/main/gta_short.mp4"
-    ],
-    "Satisfying": [
-      "https://gitlab.com/atakanakin/shortvideos/-/raw/main/satisfy_short.mp4"
-    ]
-  }
+  "Minecraft": [
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/minecraft_short_0.mp4",
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/minecraft_short_1.mp4",
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/minecraft_short_2.mp4",
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/minecraft_short_3.mp4",
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/minecraft_short_4.mp4"
+  ],
+  "Subway Surfers": [
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/subway_surfers_short_0.mp4",
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/subway_surfers_short_1.mp4",
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/subway_surfers_short_2.mp4",
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/subway_surfers_short_3.mp4",
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/subway_surfers_short_4.mp4"
+  ],
+  "GTA5": [
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/gta_short_0.mp4",
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/gta_short_1.mp4",
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/gta_short_2.mp4",
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/gta_short_3.mp4",
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/gta_short_4.mp4"
+  ],
+  "Satisfying": [
+    "https://gitlab.com/atakanakin/shortvideos/-/raw/main/satisfy_short_0.mp4"
+  ]
+}
