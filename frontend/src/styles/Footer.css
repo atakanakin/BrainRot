@@ -1,56 +1,86 @@
 footer {
-    background-color: #141414;
-    color: #E5E5E5;
-    padding: 20px;
-    text-align: center;
-  }
-  
-  footer a {
-    color: #E5E5E5;
-    font-size: 32px;
-    transition: transform 0.2s, color 0.2s;
-  }
-  
-  footer a:hover {
-    transform: scale(1.2);
-  }
-  
-  footer a:hover .twitter {
-    color: #1DA1F2;
-  }
-  
-  footer a:hover .coffee {
-    color: #FFDD00;
-  }
-  
-  footer a:hover .github {
-    color: #AAA;
-  }
-  
-  footer a:hover .linkedin {
-    color: #0077B5;
-  }
-  
-  footer .social-icons {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-  }
-
-  footer .mail-link {
-    font-size: 16px;
-    text-decoration: none;
-    color: #E5E5E5;
-  }
-  .copyright-container {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    justify-content: center;
+  background-color: #141414;
+  color: #E5E5E5;
+  padding: 20px;
+  text-align: center;
 }
 
-  .privacy-link {
-    font-size: 12px;
-    text-decoration: none;
-    color: #E5E5E5;
+footer a {
+  color: #E5E5E5;
+  font-size: 32px;
+  transition: transform 0.2s, color 0.2s;
+}
+
+footer a:hover {
+  transform: scale(1.2);
+}
+
+footer a:hover .twitter {
+  color: #1DA1F2;
+}
+
+footer a:hover .coffee {
+  color: #FFDD00;
+}
+
+footer a:hover .github {
+  color: #AAA;
+}
+
+footer a:hover .linkedin {
+  color: #0077B5;
+}
+
+footer .social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+footer .mail-link {
+  font-size: 16px;
+  text-decoration: none;
+  color: #E5E5E5;
+}
+
+.copyright-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  justify-content: center;
+}
+
+.privacy-link {
+  font-size: 12px;
+  text-decoration: none;
+  color: #E5E5E5;
+}
+
+.scout-forge-badge {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.scout-forge-badge img {
+  max-width: 300px;
+  width: 100%;
+  height: auto;
+  transition: opacity 0.2s;
+}
+
+.scout-forge-badge img:hover {
+  opacity: 0.9;
+}
+
+
+@media screen and (max-width: 768px) {
+  .scout-forge-badge img {
+    max-width: 250px;
   }
+}
+
+@media screen and (max-width: 480px) {
+  .scout-forge-badge img {
+    max-width: 200px;
+  }
+}
